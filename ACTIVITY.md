@@ -15,3 +15,7 @@ Approved PR: https://github.com/remla25-team11/model-service/pull/2
 Created PR: https://github.com/remla25-team11/lib-ml/pull/2
 Created PR: https://github.com/remla25-team11/model-service/pull/2
 Approved PR: https://github.com/remla25-team11/model-training/pull/5
+
+-- Selin: --
+Created PR: https://github.com/remla25-team11/lib-version/pull/3
+Approved PR: https://github.com/remla25-team11/app/pull/2
