@@ -1,6 +1,6 @@
 ---
-- name: Provision Kubernetes worker node
-  hosts: all
+- name: Provision Kubernetes worker nodes
+  hosts: node
   become: true
   vars:
     kube_packages:
@@ -16,8 +16,14 @@
       - { ip: "192.168.56.101", name: "node-1" }
       - { ip: "192.168.56.102", name: "node-2" }
 
-  tasks:
+  pre_tasks:
+    - name: Generate join command on controller
+      command: kubeadm token create --print-join-command
+      delegate_to: ctrl
+      register: join_command
+      run_once: true
 
+  tasks:
     - name: Disable swap
       shell: swapoff -a
 
@@ -105,3 +111,6 @@
         name: containerd
         state: restarted
         enabled: yes
+
+    - name: Run kubeadm join on workers
+      shell: "{{ join_command.stdout }}"

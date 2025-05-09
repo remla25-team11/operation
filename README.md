@@ -36,6 +36,14 @@ ansible-playbook -i ansible/inventory.cfg ansible/ctrl.yaml
 ansible-playbook -i ansible/inventory.cfg ansible/node.yaml
 ```
 
+The `node.yaml` playbook automatically handles the cluster join logic using:
+
+* `delegate_to: ctrl` to run `kubeadm token create` on the controller
+* `register: join_command` to capture the join command output
+* `shell: "{{ join_command.stdout }}"` to run the command on each worker
+
+If a node is already joined or needs a reset, you may need to manually clean it up (see README comments).
+
 ---
 
 ## SSH Key Registration (Team Access)
@@ -91,4 +99,3 @@ http://192.168.56.101:<NodePort>
 ```
 
 ---
-
