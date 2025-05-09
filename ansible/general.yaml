@@ -1,0 +1,10 @@
+- hosts: all
+  become: true
+  tasks:
+    - name: Add SSH keys 
+      ansible.posix.authorized_key:
+        user: vagrant
+        state: present
+        key: "{{ lookup('file', item) }}"
+      loop: "{{ lookup('fileglob', '../ansible/ssh_keys/*.pub', wantlist=True) }}"
+

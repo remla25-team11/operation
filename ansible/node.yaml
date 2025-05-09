@@ -1,0 +1,7 @@
+# ansible/node.yaml
+- hosts: all
+  tasks:
+    - name: Placeholder
+      debug:
+        msg: "TODO: Provisioning node"
+

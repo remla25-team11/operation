@@ -1,0 +1,46 @@
+# vagrant/Vagrantfile
+
+VAGRANTFILE_API_VERSION = "2"
+
+NUM_WORKERS = ENV.fetch("NUM_WORKERS", 2).to_i
+WORKER_MEMORY = ENV.fetch("WORKER_MEMORY", 6144).to_i
+WORKER_CPUS = ENV.fetch("WORKER_CPUS", 2).to_i
+CONTROLLER_MEMORY = 4096
+CONTROLLER_CPUS = 1
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "bento/ubuntu-24.04"
+
+  # Define controller
+  config.vm.define "ctrl" do |ctrl|
+    ctrl.vm.hostname = "ctrl"
+    ctrl.vm.network "private_network", ip: "192.168.56.100"
+    ctrl.vm.provider "virtualbox" do |vb|
+      vb.memory = CONTROLLER_MEMORY
+      vb.cpus = CONTROLLER_CPUS
+    end
+    ctrl.vm.provision "ansible" do |ansible|
+      ansible.playbook = "../ansible/ctrl.yaml"
+      ansible.inventory_path = "../ansible/inventory.cfg"
+      ansible.limit = "ctrl"
+    end
+  end
+
+  # Define workers
+  (1..NUM_WORKERS).each do |i|
+    config.vm.define "node-#{i}" do |node|
+      node.vm.hostname = "node-#{i}"
+      node.vm.network "private_network", ip: "192.168.56.#{100 + i}"
+      node.vm.provider "virtualbox" do |vb|
+        vb.memory = WORKER_MEMORY
+        vb.cpus = WORKER_CPUS
+      end
+      node.vm.provision "ansible" do |ansible|
+        ansible.playbook = "../ansible/node.yaml"
+        ansible.inventory_path = "../ansible/inventory.cfg"
+        ansible.limit = "node-#{i}"
+      end
+    end
+  end
+end
+
