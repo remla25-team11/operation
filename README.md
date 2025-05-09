@@ -1,49 +1,94 @@
-# Operation
+# REMLA Kubernetes Cluster Setup Guide
 
-## Starting docker compose
+This README documents how to provision and test a local multi-node Kubernetes cluster using Vagrant, Ansible, and kubectl for the REMLA team project.
+
+---
+
+## Cluster Overview
+
+* 1 control plane: `ctrl` @ 192.168.56.100
+* 2+ worker nodes: `node-1`, `node-2`, ... @ 192.168.56.10X
+* Base image: `bento/ubuntu-24.04`
+* Networking: Host-only private network
+
+---
+
+## VM Management (Vagrant)
+
+From the `operation/vagrant/` directory:
 
 ```bash
-docker compose up
+vagrant up                # Start with default 2 workers
+NUM_WORKERS=3 vagrant up  # Start with custom number of workers
+vagrant ssh ctrl          # SSH into controller
+vagrant ssh node-1        # SSH into first worker
+vagrant destroy -f        # Destroy all VMs
 ```
 
-## Vagrant Cluster
+---
 
-Vagrant configuration:
+## Provision VMs with Ansible
 
-The cluster consists of:
-
-- 1 **control node** (`ctrl`) – 192.168.56.100
-- N **worker nodes** (`node-1`, `node-2`, ...) – 192.168.56.10X
-
-Base image: `bento/ubuntu-24.04`
-
-### Start the cluster
-
-From the `vagrant/` directory: (`cd vagrant/`)
+From the `operation/` directory:
 
 ```bash
-# Start with 2 workers (default)
-vagrant up
-
-# Start with custom number of workers
-NUM_WORKERS=3 vagrant up
-
-# Stop and destroy
-vagrant destroy -f
-
-# Control node
-vagrant ssh ctrl
-
-# First worker node
-vagrant ssh node-1
-
-# Second worker node (if exists)
-vagrant ssh node-2
+ansible-playbook -i ansible/inventory.cfg ansible/ctrl.yaml
+ansible-playbook -i ansible/inventory.cfg ansible/node.yaml
 ```
 
-If you want to connect to the VMs without using `vagrant ssh` you need to add your public ssh key in `ansible/ssh_keys` and then rerun vagrant.
+---
 
-After this step you should be able to connect to the VM using:
+## SSH Key Registration (Team Access)
+
+1. Place public keys in `ansible/ssh_keys/`, e.g.:
+
 ```bash
-ssh -i ~/.ssh/<RESPECTIVE PRIVATE SSH KEY> vagrant@192.168.56.10X
-``
+cp ~/.ssh/id_rsa.pub ansible/ssh_keys/sowmya.pub
+```
+
+2. Run the key registration playbook:
+
+```bash
+ansible-playbook -i ansible/inventory.cfg ansible/general.yaml
+```
+
+3. Teammates can then connect via SSH:
+
+```bash
+ssh -i ~/.ssh/id_rsa vagrant@192.168.56.101
+```
+
+---
+
+## kubectl Setup (on Host)
+
+1. Set the kubeconfig path:
+
+```bash
+export KUBECONFIG=./vagrant/admin.conf
+```
+
+2. Test cluster connectivity:
+
+```bash
+kubectl get nodes
+```
+
+---
+
+## Deploy a Sample App
+
+```bash
+kubectl create deployment hello-nginx --image=nginx
+kubectl expose deployment hello-nginx --type=NodePort --port=80
+kubectl get services
+```
+
+Visit the service at:
+
+```
+http://192.168.56.101:<NodePort>
+```
+
+---
+
