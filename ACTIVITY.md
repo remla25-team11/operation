@@ -19,3 +19,9 @@ Approved PR: https://github.com/remla25-team11/model-training/pull/5
 -- Selin: --
 Created PR: https://github.com/remla25-team11/lib-version/pull/3
 Approved PR: https://github.com/remla25-team11/app/pull/2
+
+# A2
+
+-- Diego: --
+Created PR: https://github.com/remla25-team11/operation/pull/1
+Approved PR: 
