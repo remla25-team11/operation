@@ -1,7 +1,116 @@
-# ansible/node.yaml
-- hosts: all
-  tasks:
-    - name: Placeholder
-      debug:
-        msg: "TODO: Provisioning node"
+---
+- name: Provision Kubernetes worker nodes
+  hosts: node
+  become: true
+  vars:
+    kube_packages:
+      - containerd
+      - runc
+      - kubelet=1.32.4-1.1
+      - kubeadm=1.32.4-1.1
+      - kubectl=1.32.4-1.1
+    kubernetes_apt_key_url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key
+    kubernetes_apt_repo: "deb https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /"
+    hosts_entries:
+      - { ip: "192.168.56.100", name: "ctrl" }
+      - { ip: "192.168.56.101", name: "node-1" }
+      - { ip: "192.168.56.102", name: "node-2" }
 
+  pre_tasks:
+    - name: Generate join command on controller
+      command: kubeadm token create --print-join-command
+      delegate_to: ctrl
+      register: join_command
+      run_once: true
+
+  tasks:
+    - name: Disable swap
+      shell: swapoff -a
+
+    - name: Remove swap from fstab
+      lineinfile:
+        path: /etc/fstab
+        regexp: '^\s*[^#]+\s+swap\s+'
+        state: absent
+
+    - name: Load required kernel modules
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: |
+          overlay
+          br_netfilter
+
+    - name: Load modules now
+      modprobe:
+        name: "{{ item }}"
+      loop: [overlay, br_netfilter]
+
+    - name: Set sysctl values
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: net.ipv4.ip_forward, value: 1 }
+        - { name: net.bridge.bridge-nf-call-iptables, value: 1 }
+        - { name: net.bridge.bridge-nf-call-ip6tables, value: 1 }
+
+    - name: Add hosts file entries
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ item.ip }} {{ item.name }}"
+        state: present
+      loop: "{{ hosts_entries }}"
+
+    - name: Add Kubernetes apt key
+      apt_key:
+        url: "{{ kubernetes_apt_key_url }}"
+        state: present
+
+    - name: Add Kubernetes apt repo
+      apt_repository:
+        repo: "{{ kubernetes_apt_repo }}"
+        state: present
+        filename: kubernetes
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Kubernetes + containerd packages
+      apt:
+        name: "{{ kube_packages }}"
+        state: present
+
+    - name: Ensure /etc/containerd directory exists
+      file:
+        path: /etc/containerd
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Generate default containerd config
+      shell: "containerd config default > /etc/containerd/config.toml"
+      args:
+        creates: /etc/containerd/config.toml
+
+    - name: Configure containerd for Kubernetes
+      lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      loop:
+        - { regexp: '^(\s*)SystemdCgroup\s*=.*$', line: '            SystemdCgroup = true' }
+        - { regexp: '^(\s*)disable_apparmor\s*=.*$', line: '        disable_apparmor = true' }
+        - { regexp: '^(\s*)sandbox_image\s*=.*$', line: '        sandbox_image = "registry.k8s.io/pause:3.10"' }
+
+    - name: Restart containerd
+      service:
+        name: containerd
+        state: restarted
+        enabled: yes
+
+    - name: Run kubeadm join on workers
+      shell: "{{ join_command.stdout }}"
