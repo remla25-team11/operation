@@ -70,13 +70,18 @@ ssh -i ~/.ssh/id_rsa vagrant@192.168.56.101
 
 ## kubectl Setup (on Host)
 
-1. Set the kubeconfig path:
+1. Apply Flannel CNI:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+
+2. Set the kubeconfig path:
 
 ```bash
 export KUBECONFIG=./vagrant/admin.conf
 ```
 
-2. Test cluster connectivity:
+3. Test cluster connectivity:
 
 ```bash
 kubectl get nodes
