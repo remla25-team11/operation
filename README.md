@@ -74,6 +74,7 @@ ssh -i ~/.ssh/id_rsa vagrant@192.168.56.101
 
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
 
 2. Set the kubeconfig path:
 
