@@ -25,3 +25,7 @@ Approved PR: https://github.com/remla25-team11/app/pull/2
 -- Diego: --
 Created PR: https://github.com/remla25-team11/operation/pull/1
 Approved PR: 
+
+-- Leo: --
+Created PR: https://github.com/remla25-team11/operation/pull/4
+Approved PR: https://github.com/remla25-team11/operation/pull/3
