@@ -1,10 +1,11 @@
-- hosts: all
+# ansible/general.yaml
+- name: Register SSH keys on all VMs
+  hosts: all
   become: true
   tasks:
-    - name: Add SSH keys 
+    - name: Add team SSH keys to vagrant user
       ansible.posix.authorized_key:
         user: vagrant
         state: present
         key: "{{ lookup('file', item) }}"
-      loop: "{{ lookup('fileglob', '../ansible/ssh_keys/*.pub', wantlist=True) }}"
-
+      loop: "{{ lookup('fileglob', 'ssh_keys/*.pub', wantlist=True) }}"
