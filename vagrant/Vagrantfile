@@ -20,9 +20,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       vb.cpus = CONTROLLER_CPUS
     end
     config.vm.synced_folder "../ansible", "/ansible"
-    ctrl.vm.provision "ansible_local" do |ansible|
-      ansible.playbook = "/ansible/ctrl.yaml"
-      ansible.inventory_path = "/ansible/inventory.cfg"
+    ctrl.vm.provision "ansible" do |ansible|
+      ansible.playbook = "../ansible/ctrl.yaml"
+      ansible.inventory_path = "../ansible/inventory.cfg"
       ansible.limit = "ctrl"
       ansible.extra_vars = { "ANSIBLE_HOST_KEY_CHECKING" => "False" }
       ansible.raw_arguments = ["-e", "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'"]
