@@ -1,0 +1,45 @@
+services:
+
+  # Frontend Nginx app
+  app:
+    build:
+      context: https://github.com/remla25-team11/app.git
+      args:
+        # Internal network address of the app-service container
+        APP_SERVICE_URL: http://app-service:5000
+    ports:
+      # Map host port 8080 to container port 80.
+      - "8080:80"
+    depends_on:
+      # Ensure app-service starts before app
+      - app-service
+    environment:
+      APP_SERVICE_URL: http://app-service:5000
+
+  # Backend app-service
+  app-service:
+    build:
+      context: https://github.com/remla25-team11/app.git#main:app-service
+      dockerfile: Dockerfile
+    ports:
+      # Map host port 5001 to container port 5000 (optional, for debugging).
+      - "5001:5000"
+    depends_on:
+      # Ensure model-service starts before app-service
+      - model-service
+
+  # ML model service
+  model-service:
+    build:
+      context: https://github.com/remla25-team11/model-service
+    ports:
+      # Map host port 8081 to container port 8080 (optional, for debugging).
+      - "8081:8080"
+    environment:
+      MODEL_URL: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c2_Classifier_Sentiment_Model
+      VECTORIZER_URL: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c1_BoW_Sentiment_Model.pkl
+      
+
+
+# Docker Compose automatically creates a default network for inter-service communication.
+
