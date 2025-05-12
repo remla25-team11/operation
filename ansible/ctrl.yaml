@@ -103,6 +103,17 @@
 #         enabled: yes
 
 ---
+- name: Disable SSH host key checking
+  hosts: ctrl
+  become: true
+  tasks:
+    - name: Create Ansible config to disable host key checking
+      copy:
+        dest: /etc/ansible/ansible.cfg
+        content: |
+          [defaults]
+          host_key_checking = False
+
 - name: Provision Kubernetes controller node
   hosts: ctrl
   become: true
@@ -245,3 +256,132 @@
         dest: /vagrant/admin.conf
         remote_src: yes
         mode: 0644
+# Step 22: Dashboard
+
+# installing Flannel
+    - name: Copy Flannel CNI manifest to controller
+      copy:
+        src: kube-flannel.yml
+        dest: /home/vagrant/kube-flannel.yml
+        owner: vagrant
+        group: vagrant
+        mode: 0644
+
+    - name: Apply Flannel Pod network
+      become_user: vagrant
+      shell: kubectl apply -f /home/vagrant/kube-flannel.yml --kubeconfig /home/vagrant/.kube/config
+
+# installing Helm
+    - name: Add Helm GPG key
+      apt_key:
+        url: https://baltocdn.com/helm/signing.asc
+        state: present
+
+    - name: Add Helm apt repository
+      apt_repository:
+        repo: "deb https://baltocdn.com/helm/stable/debian/ all main"
+        state: present
+        filename: helm-stable
+
+    - name: Install Helm
+      apt:
+        name: helm
+        state: present
+        update_cache: yes
+# ingress for dashboard
+
+    - name: Copy Dashboard Ingress manifest
+      copy:
+        src: dashboard-ingress.yaml
+        dest: /home/vagrant/dashboard-ingress.yaml
+        owner: vagrant
+        group: vagrant
+        mode: 0644
+
+    - name: Apply Dashboard Ingress
+      become_user: vagrant
+      shell: kubectl apply -f /home/vagrant/dashboard-ingress.yaml --kubeconfig /home/vagrant/.kube/config
+
+
+
+    - name: Add Kubernetes Dashboard Helm repo
+      become_user: vagrant
+      shell: helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+      args:
+        creates: /home/vagrant/.dashboard_repo_added
+
+    - name: Update Helm repositories
+      become_user: vagrant
+      shell: helm repo update
+
+    - name: Install Kubernetes Dashboard via Helm
+      become_user: vagrant
+      shell: |
+        helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
+          --namespace kubernetes-dashboard --create-namespace \
+          --kubeconfig /home/vagrant/.kube/config \
+          --set fullnameOverride=kubernetes-dashboard \
+          --set ingress.enabled=true \
+          --set ingress.className=nginx \
+          --set ingress.annotations."nginx\.ingress\.kubernetes\.io/backend-protocol"=HTTPS \
+          --set ingress.hosts[0].host=dashboard.local \
+          --set ingress.hosts[0].paths[0].path=/ \
+          --set ingress.hosts[0].paths[0].pathType=ImplementationSpecific
+    #admin user
+    - name: Copy admin-user.yaml to controller
+      copy:
+        src: admin-user.yaml
+        dest: /home/vagrant/admin-user.yaml
+        owner: vagrant
+        group: vagrant
+        mode: 0644
+
+    - name: Apply admin-user.yaml to create service account and binding
+      become_user: vagrant
+      shell: kubectl apply -f /home/vagrant/admin-user.yaml --kubeconfig /home/vagrant/.kube/config
+
+    # ingress-nginx helm
+    - name: Add ingress-nginx Helm repo
+      become_user: vagrant
+      shell: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+      args:
+        creates: /home/vagrant/.ingress_repo_added
+
+    - name: Update Helm repos (for Ingress)
+      become_user: vagrant
+      shell: helm repo update
+
+    - name: Install NGINX Ingress Controller
+      become_user: vagrant
+      shell: |
+        helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+          --namespace ingress-nginx --create-namespace \
+          --kubeconfig /home/vagrant/.kube/config \
+          --set controller.service.type=LoadBalancer \
+          --set controller.service.loadBalancerIP=192.168.56.100 \
+          --set controller.ingressClass=nginx
+      #MetalLB
+    - name: Install MetalLB CRDs and components
+      become_user: vagrant
+      shell: kubectl apply -f /ansible/metallb-native.yaml --kubeconfig /home/vagrant/.kube/config
+      #wait
+    - name: Wait for MetalLB webhook/controller to be ready
+      become_user: vagrant
+      shell: |
+        kubectl wait deployment controller \
+          -n metallb-system \
+          --for=condition=Available=True \
+          --timeout=90s \
+          --kubeconfig /home/vagrant/.kube/config
+
+    - name: Apply MetalLB IP address pool
+      become_user: vagrant
+      shell: kubectl apply -f /ansible/ipaddresspool.yaml --kubeconfig /home/vagrant/.kube/config
+
+    - name: Apply MetalLB L2 advertisement
+      become_user: vagrant
+      shell: kubectl apply -f /ansible/l2advertisement.yaml --kubeconfig /home/vagrant/.kube/config
+
+    
+
+
