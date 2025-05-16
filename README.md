@@ -36,7 +36,7 @@ Then use that IP in your browser to access the application
 
 ### Prerequisites
 - A running Kubernetes cluster
-- kubectl` configured
+- kubectl configured
 - Helm installed
 
 ### Deploying
