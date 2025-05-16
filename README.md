@@ -4,6 +4,35 @@ This README documents how to provision and test a local multi-node Kubernetes cl
 
 ---
 
+## Running with Kubernetes
+
+### Prerequisites
+
+Before starting, make sure that minikube is running and that the Ingress addon is enabled
+
+```bash
+minikube start
+minikube addons enable ingress
+```
+
+### Applying Kubernetes manifests
+
+From the repository root (`operation/`) run:
+```bash
+kubectl apply -f k8s/
+```
+
+### Accessing the application
+
+Find the minikube IP by running:
+```bash
+minikube ip
+```
+
+Then use that IP in your browser to access the application
+
+---
+
 ## Cluster Overview
 
 * 1 control plane: `ctrl` @ 192.168.56.100
