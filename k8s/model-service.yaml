@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: model-service
+  template:
+    metadata:
+      labels:
+        app: model-service
+    spec:
+      containers:
+      - name: model-service
+        image: ghcr.io/remla25-team11/model-service:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MODEL_URL
+          value: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c2_Classifier_Sentiment_Model
+        - name: VECTORIZER_URL
+          value: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c1_BoW_Sentiment_Model.pkl
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: model-service
+spec:
+  selector:
+    app: model-service
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
