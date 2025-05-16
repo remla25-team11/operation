@@ -32,6 +32,24 @@ minikube ip
 Then use that IP in your browser to access the application
 
 ---
+## Deploying with Helm Chart
+
+### Prerequisites
+- A running Kubernetes cluster
+- kubectl` configured
+- Helm installed
+
+### Deploying
+In order to run the application to deploy the application using Helm do:
+```
+helm install <release-name> ./my_chart
+```bash
+To stop:
+```bash
+helm uninstall <release-name>
+```
+
+---
 
 ## Cluster Overview
 
