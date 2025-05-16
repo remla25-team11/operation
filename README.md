@@ -33,6 +33,7 @@ Then use that IP in your browser to access the application
 
 ---
 ## Deploying with Helm Chart
+Currently Helm is set to run on port 80. This can be changed in the values.yaml file.
 
 ### Prerequisites
 - A running Kubernetes cluster
