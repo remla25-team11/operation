@@ -41,9 +41,9 @@ Then use that IP in your browser to access the application
 
 ### Deploying
 In order to run the application to deploy the application using Helm do:
-```
-helm install <release-name> ./my_chart
 ```bash
+helm install <release-name> ./my_chart
+```
 To stop:
 ```bash
 helm uninstall <release-name>
