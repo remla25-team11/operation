@@ -13,14 +13,13 @@ spec:
         app: app
     spec:
       containers:
-      - name: app
-        image: ghcr.io/remla25-team11/app:latest
-        ports:
-        - containerPort: 80
-        env:
-        - name: APP_SERVICE_URL
-          value: http://app-service:5000
-
+        - name: app
+          image: ghcr.io/remla25-team11/app:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: APP_SERVICE_URL
+              value: /api
 ---
 apiVersion: v1
 kind: Service

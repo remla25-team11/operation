@@ -22,8 +22,8 @@ services:
       context: https://github.com/remla25-team11/app.git#main:app-service
       dockerfile: Dockerfile
     ports:
-      # Map host port 5001 to container port 5000 (optional, for debugging).
-      - "5001:5000"
+      # Map host port 5000 to container port 5000 (optional, for debugging).
+      - "5000:5000"
     depends_on:
       # Ensure model-service starts before app-service
       - model-service
@@ -33,8 +33,8 @@ services:
     build:
       context: https://github.com/remla25-team11/model-service
     ports:
-      # Map host port 8081 to container port 8080 (optional, for debugging).
-      - "8081:8080"
+      # Map host port 8000 to container port 8000 (optional, for debugging).
+      - "8000:8000"
     environment:
       MODEL_URL: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c2_Classifier_Sentiment_Model
       VECTORIZER_URL: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c1_BoW_Sentiment_Model.pkl
