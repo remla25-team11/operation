@@ -32,6 +32,25 @@ minikube ip
 Then use that IP in your browser to access the application
 
 ---
+## Deploying with Helm Chart
+Currently Helm is set to run on port 80. This can be changed in the values.yaml file.
+
+### Prerequisites
+- A running Kubernetes cluster
+- kubectl configured
+- Helm installed
+
+### Deploying
+In order to run the application to deploy the application using Helm do:
+```bash
+helm install <release-name> ./my_chart
+```
+To stop:
+```bash
+helm uninstall <release-name>
+```
+
+---
 
 ## Cluster Overview
 
