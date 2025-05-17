@@ -16,7 +16,7 @@ spec:
       - name: model-service
         image: ghcr.io/remla25-team11/model-service:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 8000
         env:
         - name: MODEL_URL
           value: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c2_Classifier_Sentiment_Model
@@ -33,5 +33,5 @@ spec:
     app: model-service
   ports:
     - protocol: TCP
-      port: 8080
-      targetPort: 8080
+      port: 8000
+      targetPort: 8000
