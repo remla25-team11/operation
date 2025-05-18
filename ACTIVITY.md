@@ -48,3 +48,8 @@ Approved PR: https://github.com/remla25-team11/operation/pull/12
 Created PR: 
 Approved PR: https://github.com/remla25-team11/app/pull/6
 
+-- Taoufik: --
+Created PR: https://github.com/remla25-team11/operation/pull/12
+Approved PR: https://github.com/remla25-team11/operation/pull/10
+
+
