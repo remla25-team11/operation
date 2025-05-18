@@ -160,4 +160,15 @@ Visit the service at:
 http://192.168.56.101:<NodePort>
 ```
 
+## Accessing Prometheus
+
+```bash
+kubectl port-forward svc/prometheus-operated -n monitoring 9090
+```
+
+Open the dashboard at:
+
+```bash
+http://localhost:9090
+```
 ---
