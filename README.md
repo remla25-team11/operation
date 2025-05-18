@@ -29,7 +29,15 @@ Find the minikube IP by running:
 minikube ip
 ```
 
-Then use that IP in your browser to access the application
+Then use that IP in your browser to access the application. 
+
+#MacOS
+
+Use a minikube tunnel and connect to the application using the localhost.
+
+```
+minikube tunnel
+```
 
 ---
 ## Deploying with Helm Chart
