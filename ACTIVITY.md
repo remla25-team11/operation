@@ -52,4 +52,8 @@ Approved PR: https://github.com/remla25-team11/app/pull/6
 Created PR: https://github.com/remla25-team11/operation/pull/12
 Approved PR: https://github.com/remla25-team11/operation/pull/10
 
-
+-- Sowmya: --
+Created PRs:
+- [#10 - operation](https://github.com/remla25-team11/operation/pull/10)
+- [#7 - app](https://github.com/remla25-team11/app/pull/7)
+- [#3 - model-service](https://github.com/remla25-team11/model-service/pull/3)
