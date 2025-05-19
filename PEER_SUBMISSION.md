@@ -13,7 +13,7 @@ Here are the links to our repositories:
 
 ## Comments for A3: 
 
-Run with kubernetes,
+## Run with kubernetes
 
 ```bash
 minikube start
@@ -28,12 +28,22 @@ minikube ip
 ```
 
 
-Helm Chart
+## Helm Chart
 ```bash
 helm install <release-name> ./my_chart
 ```
 
-Accessing Prometheus 
+## Prometheus 
+
+### Install Prometheus
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+kubectl create namespace monitoring
+helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring
+```
 
 ```bash
 kubectl port-forward svc/prometheus-operated -n monitoring 9090
