@@ -160,6 +160,16 @@ Visit the service at:
 http://192.168.56.101:<NodePort>
 ```
 
+## Install Prometheus
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+kubectl create namespace monitoring
+helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring
+```
+
 ## Accessing Prometheus
 
 ```bash
