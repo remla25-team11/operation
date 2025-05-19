@@ -13,16 +13,30 @@ Here are the links to our repositories:
 
 ## Comments for A3: 
 
-Run with kubernetes
+Run with kubernetes,
 
+```bash
 minikube start
 minikube addons enable ingress
+```
+```bash
 kubectl apply -f k8s/
-minikube ip - application should run on this ip 
+```
+Application should run on the ip address returned
+```bash
+minikube ip 
+```
+
 
 Helm Chart
+```bash
 helm install <release-name> ./my_chart
+```
 
 Accessing Prometheus 
+
+```bash
 kubectl port-forward svc/prometheus-operated -n monitoring 9090
-http://localhost:9090
+```
+
+visit - http://localhost:9090
