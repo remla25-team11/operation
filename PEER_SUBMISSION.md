@@ -49,4 +49,4 @@ helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring
 kubectl port-forward svc/prometheus-operated -n monitoring 9090
 ```
 
-visit - http://localhost:9090
+visit - http://localhost:9090/targets
