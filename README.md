@@ -179,6 +179,6 @@ kubectl port-forward svc/prometheus-operated -n monitoring 9090
 Open the dashboard at:
 
 ```bash
-http://localhost:9090
+http://localhost:9090/targets
 ```
 ---
