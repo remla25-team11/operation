@@ -181,4 +181,43 @@ Open the dashboard at:
 ```bash
 http://localhost:9090/targets
 ```
+
+## Grafana Dashboard
+
+Start port-forwarding Grafana:
+
+```bash
+kubectl port-forward svc/prometheus-grafana 3000:80 -n monitoring
+```
+
+Open browser at:
+
+```bash
+http://localhost:3000
+```
+
+To retrieve credentials:
+
+```bash
+kubectl get secret prometheus-grafana -n monitoring -o jsonpath="{.data.admin-password}" | base64 --decode
+```
+
+Go to Dashboards → Manage, and open the pre-installed dashboard named "Dashboard"
+
+# Manual Import 
+
+To import the dashboard:
+
+1. Run:
+
+   ```bash
+   kubectl port-forward svc/prometheus-grafana 3000:80 -n monitoring
+    ```
+Go to http://localhost:3000 and log in.
+
+Navigate to Dashboards → Import.
+
+Upload grafana/dashboards/app-dashboard.json.
+
+Select Prometheus as the data source and click Import.
 ---
