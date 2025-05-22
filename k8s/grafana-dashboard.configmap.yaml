@@ -1,4 +1,13 @@
-{
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  app-dashboard.json: |
+    {
   "annotations": {
     "list": [
       {
@@ -553,3 +562,4 @@
   "uid": "45b7f6cc-0372-44d5-b704-6d64212c5da7",
   "version": 8
 }
+
