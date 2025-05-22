@@ -1,4 +1,4 @@
-# A1
+# Week 2
 -- Diego: --
 Created PR: https://github.com/remla25-team11/model-training/pull/5
 Approved PR: https://github.com/remla25-team11/lib-ml/pull/2
@@ -20,7 +20,7 @@ Approved PR: https://github.com/remla25-team11/model-training/pull/5
 Created PR: https://github.com/remla25-team11/lib-version/pull/3
 Approved PR: https://github.com/remla25-team11/app/pull/2
 
-# A2
+# Week 3
 
 -- Diego: --
 Created PR: https://github.com/remla25-team11/operation/pull/1
@@ -40,7 +40,7 @@ Created PR: https://github.com/remla25-team11/operation/pull/2
 Approved PR: https://github.com/remla25-team11/operation/pull/1
 
 
-# A3
+# Week 4
 
 -- Diego: --
 Created PR: https://github.com/remla25-team11/operation/pull/6
@@ -61,3 +61,10 @@ Created PRs:
 - [#3 - model-service](https://github.com/remla25-team11/model-service/pull/3)
 
 Approved PR: https://github.com/remla25-team11/model-service/pull/4
+
+# Week 5:
+
+-- Taoufik: --
+Created PR: [#13 - operation](https://github.com/remla25-team11/operation/pull/13)
+Approved PR: 
+
