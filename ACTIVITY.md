@@ -68,3 +68,8 @@ Approved PR: https://github.com/remla25-team11/model-service/pull/4
 Created PR: [#13 - operation](https://github.com/remla25-team11/operation/pull/13)
 Approved PR: 
 
+-- Sowmya: --
+Created PR: [https://github.com/remla25-team11/model-training/pull/6](https://github.com/remla25-team11/model-training/pull/6)
+
+Approved PR: [[https://github.com/remla25-team11/operation/pull/13](https://github.com/remla25-team11/operation/pull/13)
+]
