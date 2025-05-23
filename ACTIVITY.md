@@ -62,6 +62,11 @@ Created PRs:
 
 Approved PR: https://github.com/remla25-team11/model-service/pull/4
 
+
+-- Selin: --
+Created PR: https://github.com/remla25-team11/operation/pull/7
+Approved PR: https://github.com/remla25-team11/operation/pull/6
+
 # Week 5:
 
 -- Taoufik: --
