@@ -73,3 +73,8 @@ Created PR: [https://github.com/remla25-team11/model-training/pull/6](https://gi
 
 Approved PR: [[https://github.com/remla25-team11/operation/pull/13](https://github.com/remla25-team11/operation/pull/13)
 ]
+
+-- Diego: --
+Approved PR: [#6 - model-training](https://github.com/remla25-team11/model-training/pull/6)
+Created PR: 
+
