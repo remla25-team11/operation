@@ -73,6 +73,10 @@ Approved PR: https://github.com/remla25-team11/operation/pull/6
 Created PR: [#13 - operation](https://github.com/remla25-team11/operation/pull/13)
 Approved PR: https://github.com/remla25-team11/app/pull/10
 
+-- Leo: --
+Created PR: https://github.com/remla25-team11/model-training/pull/7
+Approved PR: https://github.com/remla25-team11/model-training/pull/8
+
 -- Sowmya: --
 Created PR: [https://github.com/remla25-team11/model-training/pull/6](https://github.com/remla25-team11/model-training/pull/6)
 
