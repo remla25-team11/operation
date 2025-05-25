@@ -83,3 +83,6 @@ Approved PR: [[https://github.com/remla25-team11/operation/pull/13](https://gith
 Approved PR: [#6 - model-training](https://github.com/remla25-team11/model-training/pull/6)
 Created PR: 
 
+-- Selin: --
+Approved PR: https://github.com/remla25-team11/model-training/pull/7
+Created PR: 
