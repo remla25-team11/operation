@@ -85,4 +85,4 @@ Created PR:
 
 -- Selin: --
 Approved PR: https://github.com/remla25-team11/model-training/pull/7
-Created PR: 
+Created PR: https://github.com/remla25-team11/model-training/pull/8
