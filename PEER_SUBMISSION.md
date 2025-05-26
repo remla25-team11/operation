@@ -12,5 +12,30 @@ Here are the links to our repositories:
 6. app: https://github.com/remla25-team11/app/tree/a3
 
 ## Comments for A4: 
-Pipeline Management with DVC
+
+```bash
+git clone https://github.com/remla25-team11/model-training.git
+```
+
+### ML Conﬁguration Management
+
+### Pipeline Management with DVC
 ![image](https://github.com/user-attachments/assets/1b4fa996-a4f1-46b5-b7b4-0b17e7c37c79)
+
+### Code Quality
+```bash
+cd model-training
+```
+```bash
+pylint .
+```
+```bash
+flake8 .
+```
+```bash
+bandit -r .
+```
+
+
+
+
