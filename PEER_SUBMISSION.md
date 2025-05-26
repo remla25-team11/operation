@@ -12,6 +12,7 @@ Here are the links to our repositories:
 6. app: https://github.com/remla25-team11/app/tree/a3
 
 ## Comments for A4: 
+ALl the necessary info regarding DVC setup and coverage report is updated in the readme of model-training repo 
 
 ```bash
 git clone https://github.com/remla25-team11/model-training.git
