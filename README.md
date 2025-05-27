@@ -219,5 +219,45 @@ Navigate to Dashboards → Import.
 
 Upload grafana/dashboards/app-dashboard.json.
 
-Select Prometheus as the data source and click Import.
+## Select Prometheus as the data source and click Import.
+
+#### Prerequisites
+
+Make sure you have:
+
+1. Istio installed (if not):
+
+   ```bash
+   istioctl install --set profile=demo -y
+   ```
+2. Sidecar injection enabled:
+
+```bash
+kubectl label namespace default istio-injection=enabled
+```
+3. Apply Gateway, VirtualService, DestinationRule:
+
+   ```bash
+   kubectl apply -f k8s/istio-gateway.yaml
+   kubectl apply -f k8s/virtual-service-app.yaml
+   kubectl apply -f k8s/destination-rule-app.yaml
+   ```
+
+## If you are on macOS or using Minikube, run:
+
+```bash
+kubectl port-forward -n istio-system svc/istio-ingressgateway 8080:80
+```
+
+# Always routes to app v2
+
+```bash
+curl -H "user: test-user" http://localhost:8080/version
+```
+
+# Always routes to app v1
+```bash
+curl http://localhost:8080/version
+```
+
 ---
