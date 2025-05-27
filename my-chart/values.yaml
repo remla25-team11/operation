@@ -121,3 +121,8 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+rateLimit:
+  enabled: true
+  maxTokens: 2
+  fillInterval: 10s

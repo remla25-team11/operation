@@ -264,3 +264,51 @@ curl http://localhost:8080/version
 ```
 
 ---
+
+## Additional Use Case
+
+### Rate Limit Setup
+
+This project includes a configurable rate limiting mechanism for the app service, using Istio's EnvoyFilter.
+
+
+### Deploy the Rate Limiter
+
+inside /operation directory , install Helm chart. THis deploys the app service and rate limiter that allows 2 requests every 10 seconds per pod
+
+
+```bash
+helm upgrade --install app ./my-chart
+```
+
+### Customize the Rate Limit
+
+You can change the limit by overriding the default values
+
+```bash 
+helm upgrade app ./my-chart \
+  --set rateLimit.maxTokens=1 \
+  --set rateLimit.tokensPerFill=1 \
+  --set rateLimit.fillInterval=30s
+```
+
+### Test the Rate Limiting 
+
+```bash 
+minikube ip
+```
+use this ip for the bellow command
+
+``` bash 
+for i in {1..10}; do curl -i http://$(minikube ip)/; sleep 1; done
+```
+you should see a response like :
+
+HTTP/1.1 429 Too Many Requests
+x-rate-limit: true
+
+### Uninstall the app after testing
+
+```bash
+helm uninstall app
+``` 
