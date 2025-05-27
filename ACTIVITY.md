@@ -67,7 +67,7 @@ Approved PR: https://github.com/remla25-team11/model-service/pull/4
 Created PR: https://github.com/remla25-team11/operation/pull/7
 Approved PR: https://github.com/remla25-team11/operation/pull/6
 
-# Week 5:
+# Week 5
 
 -- Taoufik: --
 Created PR: [#13 - operation](https://github.com/remla25-team11/operation/pull/13)
@@ -90,3 +90,11 @@ Created PR: [#10 - Fix version fetching](https://github.com/remla25-team11/app/p
 -- Selin: --
 Approved PR: https://github.com/remla25-team11/model-training/pull/7
 Created PR: https://github.com/remla25-team11/model-training/pull/8
+
+# Week 6
+
+-- Sowmya: --
+Created PR: https://github.com/remla25-team11/operation/pull/15
+Approved PR: https://github.com/remla25-team11/operation/pull/14
+
+
