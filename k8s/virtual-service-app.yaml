@@ -1,0 +1,24 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: app
+  namespace: default
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - my-gateway
+  http:
+    - match:
+        - headers:
+            user:
+              exact: test-user
+      route:
+        - destination:
+            host: app
+            subset: v2
+    - route:
+        - destination:
+            host: app
+            subset: v1
+
