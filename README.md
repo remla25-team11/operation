@@ -221,6 +221,9 @@ Upload grafana/dashboards/app-dashboard.json.
 
 ## Select Prometheus as the data source and click Import.
 
+
+## Sticky Sessions Istio
+
 #### Prerequisites
 
 Make sure you have:
@@ -249,13 +252,13 @@ kubectl label namespace default istio-injection=enabled
 kubectl port-forward -n istio-system svc/istio-ingressgateway 8080:80
 ```
 
-# Always routes to app v2
+### Always routes to app v2
 
 ```bash
 curl -H "user: test-user" http://localhost:8080/version
 ```
 
-# Always routes to app v1
+### Always routes to app v1
 ```bash
 curl http://localhost:8080/version
 ```
