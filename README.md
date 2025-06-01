@@ -269,27 +269,39 @@ curl http://localhost:8080/version
 
 ### Rate Limit Setup
 
-This project includes a configurable rate limiting mechanism for the app service, using Istio's EnvoyFilter.
-
-
-### Deploy the Rate Limiter
-
-inside /operation directory , install Helm chart. THis deploys the app service and rate limiter that allows 2 requests every 10 seconds per pod
-
+This project includes a configurable rate limiting mechanism for the app service, using Istio's EnvoyFilter and managed via Helm. Rate limiting is applied per version of the app (app-v1, app-v2) through local rate limiting at the Istio sidecar proxy level. 
 
 ```bash
-helm upgrade --install app ./my-chart
+minikube start --memory=4096 --cpus=4 --driver=docker 
+minikube addons enable ingress
+```
+inside /operation directory
+
+```bash
+kubectl apply -f k8s/
 ```
 
-### Customize the Rate Limit
+### Install App Versions via Helm
 
 You can change the limit by overriding the default values
 
 ```bash 
-helm upgrade app ./my-chart \
-  --set rateLimit.maxTokens=1 \
-  --set rateLimit.tokensPerFill=1 \
-  --set rateLimit.fillInterval=30s
+helm install app-v1 ./my-chart \
+  --set appVersion=v1 \
+  --set rateLimit.enabled=true \
+  --set rateLimit.maxTokens=2 \
+  --set rateLimit.tokensPerFill=2 \
+  --set rateLimit.fillInterval=10s
+
+```
+
+```bash 
+helm install app-v2 ./my-chart \
+  --set appVersion=v2 \
+  --set rateLimit.enabled=true \
+  --set rateLimit.maxTokens=5 \
+  --set rateLimit.tokensPerFill=5 \
+  --set rateLimit.fillInterval=10s
 ```
 
 ### Test the Rate Limiting 
@@ -299,16 +311,37 @@ minikube ip
 ```
 use this ip for the bellow command
 
+### Test app-v1 (default routing, no header)
 ``` bash 
-for i in {1..10}; do curl -i http://$(minikube ip)/; sleep 1; done
+for i in {1..10}; do
+  echo -n "v1 Request $i: "
+  curl -s -o /dev/null -w "%{http_code}\n" http://{minikube-ip}/
+  sleep 1
+done
 ```
+### Test app-v2 (header-based routing to v2)
+``` bash 
+for i in {1..10}; do
+  echo -n "v2 Request $i: "
+  curl -s -o /dev/null -w "%{http_code}\n" -H "user: test-user" http://{minikube-ip}/
+  sleep 1
+done
+```
+
 you should see a response like :
 
 HTTP/1.1 429 Too Many Requests
 x-rate-limit: true
 
+Additionally, you can run the below command to see active envoyfilters 
+```bash
+kubectl get envoyfilter
+```
+![image](https://github.com/user-attachments/assets/0e547c42-d726-43cd-b2c7-4d53a7d49951)
+
 ### Uninstall the app after testing
 
 ```bash
-helm uninstall app
+helm uninstall app-v1
+helm uninstall app-v2
 ``` 
