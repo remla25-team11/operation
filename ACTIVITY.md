@@ -97,6 +97,9 @@ Created PR: https://github.com/remla25-team11/model-training/pull/8
 Created PR: https://github.com/remla25-team11/operation/pull/15
 Approved PR: https://github.com/remla25-team11/operation/pull/14
 
+-- Diego --
+Created PR: https://github.com/remla25-team11/operation/pull/16
+Approved PR: 
 
 -- Taoufik: --
 Created PR: https://github.com/remla25-team11/operation/pull/14
