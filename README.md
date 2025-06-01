@@ -2,6 +2,21 @@
 
 This README documents how to provision and test a local multi-node Kubernetes cluster using Vagrant, Ansible, and kubectl for the REMLA team project.
 
+## System Diagram
+
+![System Diagram](assets/System-diagram.png)
+
+User requests enter through the **Istio Ingress Gateway**, which forwards them to a **VirtualService** that controls routing based on user headers. Traffic is then directed to either the `app-v1` or `app-v2` frontend deployments using **DestinationRules**:
+
+* `app-v1` serves standard users.
+* `app-v2` is used for testing user behavior with new features (e.g., A/B testing or canary releases).
+
+Both versions are exposed through a single **Kubernetes Service (`app`)**, which abstracts over the versioned frontend Pods. These frontends communicate with the **`app-service`** backend through another Kubernetes Service. The backend then calls the **`model-service`**, which provides machine learning predictions or processing logic.
+
+For monitoring, **Prometheus** scrapes metrics from services and Istio proxies. These metrics are visualized via **Grafana** dashboards and **Kiali**, offering observability into the mesh and service interactions.
+
+(Diagram created using [draw.io](https://www.drawio.com/))
+
 ---
 
 ## Running with Kubernetes
