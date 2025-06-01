@@ -1,12 +1,14 @@
+{{- if .Values.rateLimit.enabled }}
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: rate-limit-app
+  name: rate-limit-app-{{ .Values.appVersion }}
   namespace: default
 spec:
   workloadSelector:
     labels:
       app: app
+      version: {{ .Values.appVersion | quote }}
   configPatches:
     - applyTo: HTTP_FILTER
       match:
@@ -42,3 +44,4 @@ spec:
                 header:
                   key: x-rate-limit
                   value: "true"
+{{- end }}
