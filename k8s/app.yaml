@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: ghcr.io/remla25-team11/app:latest
+          image: ghcr.io/remla25-team11/app:v1.2.3
           ports:
             - containerPort: 80
           env:
