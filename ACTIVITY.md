@@ -97,6 +97,10 @@ Created PR: https://github.com/remla25-team11/model-training/pull/8
 Created PR: https://github.com/remla25-team11/operation/pull/15
 Approved PR: https://github.com/remla25-team11/operation/pull/14
 
+-- Leo: --
+Created PR: https://github.com/remla25-team11/operation/pull/17
+Approved PR: https://github.com/remla25-team11/operation/pull/18
+
 -- Diego --
 Created PR: [#16 - visual support](https://github.com/remla25-team11/operation/pull/16)
 Approved PR: [#15 - rate limiting](https://github.com/remla25-team11/operation/pull/15)
