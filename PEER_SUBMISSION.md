@@ -1,6 +1,6 @@
 # REMLA Course 2025  
 ## Team-11 
-### Assignment-4 
+### Assignment-5 
 
 Here are the links to our repositories:
 
@@ -11,32 +11,7 @@ Here are the links to our repositories:
 5. lib-version: https://github.com/remla25-team11/lib-version/tree/a1
 6. app: https://github.com/remla25-team11/app/tree/a3
 
-## Comments for A4: 
-ALl the necessary info regarding DVC setup and coverage report is updated in the readme of model-training repo 
+## Comments for A5: 
 
-```bash
-git clone https://github.com/remla25-team11/model-training.git
-```
-
-### ML Conﬁguration Management
-
-### Pipeline Management with DVC
-![image](https://github.com/user-attachments/assets/1b4fa996-a4f1-46b5-b7b4-0b17e7c37c79)
-
-### Code Quality
-```bash
-cd model-training
-```
-```bash
-pylint .
-```
-```bash
-flake8 .
-```
-```bash
-bandit -r .
-```
-
-
-
+Instructions to test additional use case - rate limiting is provided in the README.md of operations repository 
 
