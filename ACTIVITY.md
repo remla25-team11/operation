@@ -98,8 +98,8 @@ Created PR: https://github.com/remla25-team11/operation/pull/15
 Approved PR: https://github.com/remla25-team11/operation/pull/14
 
 -- Diego --
-Created PR: https://github.com/remla25-team11/operation/pull/16
-Approved PR: 
+Created PR: [#16 - visual support](https://github.com/remla25-team11/operation/pull/16)
+Approved PR: [#14 - rate limiting](https://github.com/remla25-team11/operation/pull/15)
 
 -- Taoufik: --
 Created PR: https://github.com/remla25-team11/operation/pull/14
