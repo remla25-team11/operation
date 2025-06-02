@@ -1,8 +1,11 @@
 # REMLA Kubernetes Cluster Setup Guide
 
-This README documents how to provision and test a local multi-node Kubernetes cluster using Vagrant, Ansible, and kubectl for the REMLA team project.
+This README outlines the deployment structure and data flow and will also document how to provision and test a local multi-node Kubernetes cluster using Vagrant, Ansible, and kubectl for the REMLA team project.
+
 
 ## System Diagram
+
+The deployment consists of microservices which are split across multiple repositories. Each have distinct functions and are deployed into a Kubernetes cluster. Traffic management is handled via Istio.
 
 ![System Diagram](assets/System-diagram.png)
 
@@ -16,6 +19,53 @@ Both versions are exposed through a single **Kubernetes Service (`app`)**, which
 For monitoring, **Prometheus** scrapes metrics from services and Istio proxies. These metrics are visualized via **Grafana** dashboards and **Kiali**, offering observability into the mesh and service interactions.
 
 (Diagram created using [draw.io](https://www.drawio.com/))
+
+---
+
+## Deployed Services
+
+| Component | Source | Description |
+|----------|-------------|-------------|
+| `app-v1` / `app-v2` | [`app`](https://github.com/remla25-team11/app) | Frontend services served via `app` service and routed via Istio |
+| `app-service` | [`app`](https://github.com/remla25-team11/app) | Backend logic that processes input and calls ML services |
+| `model-service` | [`model-service`](https://github.com/remla25-team11/model-service) | Flask microservice providing ML predictions using `lib-ml` |
+| `lib-ml` | [`lib-ml`](https://github.com/remla25-team11/lib-ml) | Preprocessing and utilities for training and inference |
+| `model-training` | [`model-training`](https://github.com/remla25-team11/model-training) | Trains and exports models to `model-service` |
+| `lib-version` | [`lib-version`](https://github.com/remla25-team11/lib-version) | Control library used by multiple components |
+
+
+---
+
+## Flow of Requests
+
+1. **User Request → Istio Gateway**  
+   External HTTP traffic enters via `istio-ingressgateway`.
+
+2. **Gateway → VirtualService**  
+   Istio routes requests based on HTTP headers:
+   - `app-v1` (stable users)
+   - `app-v2` (test users)
+
+3. **Frontend → Service: app**  
+   Both versions (`app-v1`, `app-v2`) are addressed by a single Kubernetes `Service`.
+
+4. **Frontend → app-service**  
+   The frontend calls the backend for application logic and data management.
+
+5. **app-service → model-service**  
+   The backend sends requests to the ML service (`model-service`) for inference.
+
+6. **model-service → lib-ml**  
+   Uses shared code from `lib-ml` to pre-process inputs and serve model outputs.
+
+---
+
+## Experimental Design
+
+The following experiments can be done:
+- **A/B testing**: Route based on custom headers using `VirtualService`.
+- **Canary releases**: Gradually shift traffic from `app-v1` to `app-v2`.
+- **Version feedback**: `lib-version` enables consistent version labeling across services.
 
 ---
 
