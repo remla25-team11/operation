@@ -10,6 +10,7 @@ Furthermore, manual management is a burden on contributors who need to manually 
 ## Solution
 One way to deal with this is to use ```poetry```[2] to manage dependencies in a more structured and reproducible way, with version locking and environment isolation. Poetry is a tool for dependency management and packaging in Python. To apply ```poetry``` effectively across the project, we propose managing all dependencies through Poetry’s resolution mechanism. This allows us to define shared dependencies with consistent versions across branches. We can also introduce a CI step to verify such consistencies.
 
+
 ## Confirming Improvement
 In order to confirm whether using ```poetry``` is an improvement, we can run an empirical expirement. We compare the state of the project before and after adopting it, and observe the following:
 - Errors due to dependency mismatch
@@ -17,8 +18,9 @@ In order to confirm whether using ```poetry``` is an improvement, we can run an 
   
  Based on these we can validate if the proposed solution is desirable.
 
+## Conclusion
+This solution is broadly applicable to various other projects, especially in ML or microservices architectures that rely on managing dependencies. By adopting Poetry, we could avoid manual dependency issues further into the development of the project.
 
-
-[1]: M. Shahin, M. Ali Babar and L. Zhu, "Continuous Integration, Delivery and Deployment: A Systematic Review on Approaches, Tools, Challenges and Practices," in IEEE Access, vol. 5, pp. 3909-3943, 2017, doi: 10.1109/ACCESS.2017.2685629.
+[1]: https://ieeexplore-ieee-org.tudelft.idm.oclc.org/document/7884954
 
 [2]: https://python-poetry.org/docs/dependency-specification/
