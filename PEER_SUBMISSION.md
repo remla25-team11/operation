@@ -14,4 +14,5 @@ Here are the links to our repositories:
 ## Comments for A5: 
 
 Instructions to test additional use case - rate limiting is provided in the README.md of operations repository 
+Make sure to have installed the right dependencies before testing things out.
 
