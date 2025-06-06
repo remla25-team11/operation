@@ -1,0 +1,10 @@
+---
+# This is the master playbook that controls the order of operations.
+
+# First, fully provision the controller node.
+# Ansible will automatically limit this to hosts in the 'controller' group.
+- import_playbook: ctrl.yaml
+
+# ONLY AFTER the controller is done, provision the worker nodes.
+# Ansible will automatically limit this to hosts in the 'workers' group.
+- import_playbook: node.yaml
