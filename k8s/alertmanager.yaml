@@ -11,7 +11,7 @@ data:
       smtp_smarthost: 'smtp.gmail.com:587'
       smtp_from: 'selinmehmed124@gmail.com'
       smtp_auth_username: 'selinmehmed124@gmail.com'
-      smtp_auth_password: '{{ smtp_password }}'
+      smtp_auth_password: /etc/alertmanager/secrets/smtp_auth_password
     route:
       receiver: 'team-email'
     receivers:
