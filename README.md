@@ -426,4 +426,70 @@ kubectl get envoyfilter
 ```bash
 helm uninstall app-v1
 helm uninstall app-v2
-``` 
+```
+
+
+## Extra use case - shadow launch 
+
+```bash
+minikube start --memory=4096 --cpus=4 --driver=docker 
+minikube addons enable ingress
+```
+Istio installed (if not):
+
+```bash
+istioctl install --set profile=demo -y
+```
+Sidecar injection enabled:
+
+```bash
+kubectl label namespace default istio-injection=enabled
+```
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
+```
+
+```bash
+kubectl apply -f k8s/
+```
+
+To find node-port value 
+
+```bash
+kubectl get svc istio-ingressgateway -n istio-system
+```
+```
+NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                                                                      AGE
+istio-ingressgateway   LoadBalancer   10.96.177.123   <pending>     15021:30852/TCP,80:30814/TCP,443:30633/TCP,31400:32202/TCP,15443:30670/TCP   2m35s
+```
+
+(30814 is the nodeport here) 
+
+```bash
+ curl -X POST http://{minikube-ip}:{node-port}/predict -H "Content-Type: application/json" -d '{"review": "Good food!"}
+```
+
+To check metrics  
+
+```bash
+kubectl port-forward deploy/model-service-v3 9001:8000
+```
+
+Open new terminal 
+
+```bash
+curl http://localhost:9001/metrics
+```
+
+should be able to see the counter update for every time predict is called
+
+```
+# TYPE predict_requests_total counter
+predict_requests_total{version="v3"} 2.0
+# HELP predict_requests_created Total number of /predict requests
+# TYPE predict_requests_created gauge
+predict_requests_created{version="v3"} 1.7495915754185112e+09
+```
