@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: high-traffic-alert
+  namespace: monitoring
+spec:
+  groups:
+  - name: traffic.rules
+    rules:
+    - alert: HighRequestRate
+      expr: rate(http_requests_total[1m]) > 15
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High request rate !"
+        description: "More than 15 requests per min for 2 min"
