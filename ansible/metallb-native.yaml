@@ -1756,6 +1756,10 @@ spec:
         secret:
           defaultMode: 420
           secretName: metallb-webhook-cert
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
 ---
 apiVersion: apps/v1
 kind: DaemonSet

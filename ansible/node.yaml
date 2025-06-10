@@ -1,6 +1,6 @@
 ---
 - name: Provision Kubernetes worker nodes
-  hosts: node
+  hosts: workers
   become: true
   vars:
     kube_packages:
@@ -15,13 +15,6 @@
       - { ip: "192.168.56.100", name: "ctrl" }
       - { ip: "192.168.56.101", name: "node-1" }
       - { ip: "192.168.56.102", name: "node-2" }
-
-  pre_tasks:
-    - name: Generate join command on controller
-      command: kubeadm token create --print-join-command
-      delegate_to: ctrl
-      register: join_command
-      run_once: true
 
   tasks:
     - name: Disable swap
@@ -83,13 +76,10 @@
         name: "{{ kube_packages }}"
         state: present
 
-    - name: Ensure /etc/containerd directory exists
+    - name: Ensure containerd config directory exists
       file:
         path: /etc/containerd
         state: directory
-        owner: root
-        group: root
-        mode: 0755
 
     - name: Generate default containerd config
       shell: "containerd config default > /etc/containerd/config.toml"
@@ -102,7 +92,7 @@
         regexp: "{{ item.regexp }}"
         line: "{{ item.line }}"
       loop:
-        - { regexp: '^(\s*)SystemdCgroup\s*=.*$', line: '            SystemdCgroup = true' }
+        - { regexp: '^(\s*)SystemdCgroup\s*=.*$', line: '          SystemdCgroup = true' }
         - { regexp: '^(\s*)disable_apparmor\s*=.*$', line: '        disable_apparmor = true' }
         - { regexp: '^(\s*)sandbox_image\s*=.*$', line: '        sandbox_image = "registry.k8s.io/pause:3.10"' }
 
@@ -112,5 +102,11 @@
         state: restarted
         enabled: yes
 
+    - name: Fetch kubeadm join command from controller using slurp
+      ansible.builtin.slurp:
+        src: /tmp/kubeadm_join_command.txt
+      delegate_to: ctrl
+      register: join_command_slurped
+
     - name: Run kubeadm join on workers
-      shell: "{{ join_command.stdout }}"
+      shell: "{{ join_command_slurped['content'] | b64decode }}"
