@@ -3,18 +3,18 @@ kind: ConfigMap
 metadata:
   name: alertmanager
   namespace: monitoring
-labels:
-  app: alertmanager
+  labels:
+    app: alertmanager
 data:
   alertmanager.yml: |
     global:
       smtp_smarthost: 'smtp.gmail.com:587'
-      smtp_from: 'selinmehmed124@gmail.com'
-      smtp_auth_username: 'selinmehmed124@gmail.com'
-      smtp_auth_password: /etc/alertmanager/secrets/smtp_auth_password
+      smtp_from: 'intheshadowsgirl@gmail.com'
+      smtp_auth_username: 'intheshadowsgirl@gmail.com'
+      smtp_auth_password_file: /etc/alertmanager/secrets/smtp_auth_password
     route:
       receiver: 'team-email'
     receivers:
     - name: 'team-email'
       email_configs:
-      - to: 'intheshadowsgirl@gmail.com'
+      - to: 'selinmehmed124@gmail.com'
