@@ -336,11 +336,28 @@ curl http://localhost:8080/version
 
 This project includes a configurable rate limiting mechanism for the app service, using Istio's EnvoyFilter and managed via Helm. Rate limiting is applied per version of the app (app-v1, app-v2) through local rate limiting at the Istio sidecar proxy level. 
 
+Ensure you are in /operation directory
+
 ```bash
 minikube start --memory=4096 --cpus=4 --driver=docker 
 minikube addons enable ingress
 ```
-inside /operation directory
+Istio installed (if not):
+
+```bash
+istioctl install --set profile=demo -y
+```
+Sidecar injection enabled:
+
+```bash
+kubectl label namespace default istio-injection=enabled
+```
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
+```
 
 ```bash
 kubectl apply -f k8s/
