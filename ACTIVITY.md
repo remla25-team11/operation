@@ -121,5 +121,5 @@ Approved PR: [#11 - Add dark mode](https://github.com/remla25-team11/app/pull/11
 
 
 -- Selin: --
-Created PR:
+Created PR: https://github.com/remla25-team11/operation/pull/20
 Approved PR: https://github.com/remla25-team11/operation/pull/19
