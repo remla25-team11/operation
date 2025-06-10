@@ -1,18 +1,18 @@
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: model-service
+  name: model-service-v3
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: model-service
-      version: v1
+      version: v3
   template:
     metadata:
       labels:
         app: model-service
+        version: v3
     spec:
       containers:
       - name: model-service
@@ -21,21 +21,8 @@ spec:
         - containerPort: 8000
         env:
         - name: SERVICE_VERSION
-          value: v1   # in model-service.yaml
+          value: v3   
         - name: MODEL_URL
           value: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c2_Classifier_Sentiment_Model
         - name: VECTORIZER_URL
           value: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c1_BoW_Sentiment_Model.pkl
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: model-service
-spec:
-  selector:
-    app: model-service
-  ports:
-    - protocol: TCP
-      port: 8000
-      targetPort: 8000
