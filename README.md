@@ -247,6 +247,22 @@ Open the dashboard at:
 http://localhost:9090/targets
 ```
 
+## Alert Manager
+
+Do:
+```bash
+helm upgrade prometheus prometheus-community/prometheus \
+  -f custom-values.yaml \
+  --set alertmanager.config.global.smtp_auth_password="$(kubectl get secret alertmanager-secret -o jsonpath="{.data.smtp_auth_password}" | base64 --decode)"
+```
+
+In order to test the alert manager, you can run: (keep open in terminal)
+```bash
+while true; do curl -s http://localhost:9090/ >/dev/null; sleep 2; done
+```
+
+Wait until the alert shows up as firing, and in a few minutes you should receive an email.
+
 ## Grafana Dashboard
 
 Start port-forwarding Grafana:

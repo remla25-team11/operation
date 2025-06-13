@@ -3,24 +3,13 @@ serverFiles:
     groups:
       - name: request-alerts
         rules:
-          - alert: HighRequestRateChanged1
+          - alert: HighRequestRate
             expr: rate(prometheus_http_requests_total[5m]) > 0.25
             for: 1m
             labels:
               severity: warning
             annotations:
               summary: "More than 15 requests per minute"
-
-      # - name: request-alerts
-      #   rules:
-      #   - alert: HighRequestRate
-      #     expr: rate(prometheus_http_requests_total[1m]) > 0.25
-      #     for: 1m
-      #     labels:
-      #       severity: warning
-      #     annotations:
-      #       summary: "High request rate detected"
-      #       description: "Request rate is above 15 per minute. Current rate: {{ printf \"%.2f\" (multiply $value 60) }} requests/min."
 
 alertmanager:
   config:
