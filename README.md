@@ -251,9 +251,9 @@ http://localhost:9090/targets
 
 Do:
 ```bash
-helm upgrade prometheus prometheus-community/prometheus \
-  -f custom-values.yaml \
-  --set alertmanager.config.global.smtp_auth_password="$(kubectl get secret alertmanager-secret -o jsonpath="{.data.smtp_auth_password}" | base64 --decode)"
+helm upgrade prometheus prometheus-community/kube-prometheus-stack \
+-n monitoring \
+-f custom-values.yaml 
 ```
 
 In order to test the alert manager, you can run: (keep open in terminal)
