@@ -1,0 +1,43 @@
+serverFiles:
+  alerting_rules.yml:
+    groups:
+      - name: request-alerts
+        rules:
+          - alert: HighRequestRateChanged1
+            expr: rate(prometheus_http_requests_total[5m]) > 0.25
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "More than 15 requests per minute"
+
+      # - name: request-alerts
+      #   rules:
+      #   - alert: HighRequestRate
+      #     expr: rate(prometheus_http_requests_total[1m]) > 0.25
+      #     for: 1m
+      #     labels:
+      #       severity: warning
+      #     annotations:
+      #       summary: "High request rate detected"
+      #       description: "Request rate is above 15 per minute. Current rate: {{ printf \"%.2f\" (multiply $value 60) }} requests/min."
+
+alertmanager:
+  config:
+    global:
+      smtp_smarthost: smtp.gmail.com:587
+      smtp_from: 'intheshadowsgirl@gmail.com'
+      smtp_auth_username: 'intheshadowsgirl@gmail.com'
+      smtp_auth_password: '{{ .Values.smtp_password }}'
+      smtp_require_tls: true
+    route:
+      receiver: team-email
+    receivers:
+    - name: team-email
+      email_configs:
+      - to: 'selinmehmed124@gmail.com'
+        send_resolved: true
+
+  extraSecret:
+    smtp-password:
+      smtp_password: '{{ .Values.smtp_password }}'
