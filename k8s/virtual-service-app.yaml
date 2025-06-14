@@ -10,15 +10,29 @@ spec:
     - my-gateway
   http:
     - match:
-        - headers:
+        - uri:
+            prefix: /api
+      route:
+        - destination:
+            host: app-service
+            port:
+              number: 5000
+
+    - match:
+        - uri:
+            prefix: /
+          headers:
             user:
               exact: test-user
       route:
         - destination:
-            host: app
+            host: app.default.svc.cluster.local
             subset: v2
-    - route:
-        - destination:
-            host: app
-            subset: v1
 
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: app.default.svc.cluster.local
+            subset: v1
