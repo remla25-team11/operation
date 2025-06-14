@@ -142,3 +142,6 @@ Created PR: [https://github.com/remla25-team11/app/pull/13/commits/08b4e6efe1ac7
 https://github.com/remla25-team11/operation/pull/22
 Approved PR: https://github.com/remla25-team11/app/pull/12
 
+-- Selin: --
+Approved PR: https://github.com/remla25-team11/operation/pull/21
+
