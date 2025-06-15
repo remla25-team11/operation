@@ -143,5 +143,6 @@ https://github.com/remla25-team11/operation/pull/22
 Approved PR: https://github.com/remla25-team11/app/pull/12
 
 -- Selin: --
+Created PR: https://github.com/remla25-team11/model-training/pull/12
 Approved PR: https://github.com/remla25-team11/operation/pull/21
 
