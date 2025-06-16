@@ -120,7 +120,7 @@ Created PR: [#19 - Move kubernetes cluster](https://github.com/remla25-team11/op
 Approved PR: [#11 - Add dark mode](https://github.com/remla25-team11/app/pull/11)
 
 -- Leo: --
-Created PR: https://github.com/remla25-team11/app/pull/12
+Created PR: https://github.com/remla25-team11/app/pull/12 (related to A1)
 Approved PR: 
 
 -- Selin: --
