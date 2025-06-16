@@ -135,3 +135,19 @@ rateLimit:
   maxTokens: 5
   tokensPerFill: 5
   fillInterval: 10s
+
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: webhook-receiver
+      routes:
+        - matchers:
+            - alertname = "Watchdog"
+          receiver: webhook-receiver
+    receivers:
+    - name: webhook-receiver
+      webhook_configs:
+      - url: '	https://webhook.site/4bc19b38-6d41-46b2-8fce-5adefa3475d4'
+        send_resolved: true
