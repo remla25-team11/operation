@@ -4,8 +4,8 @@ Created PR: https://github.com/remla25-team11/model-training/pull/5
 Approved PR: https://github.com/remla25-team11/lib-ml/pull/2
 
 -- Leo: --
-Created PR: https://github.com/remla25-team11/app/pull/1
-Approved PR: https://github.com/remla25-team11/model-training/pull/1
+Created PR: https://github.com/remla25-team11/app/pull/1 (related to A1)
+Approved PR: https://github.com/remla25-team11/model-training/pull/1 (related to A1)
 
 -- Taoufik: --
 Created PR: https://github.com/remla25-team11/app/pull/2
@@ -28,8 +28,8 @@ Created PR: https://github.com/remla25-team11/operation/pull/3
 Approved PR: https://github.com/remla25-team11/operation/pull/4
 
 -- Leo: --
-Created PR: https://github.com/remla25-team11/operation/pull/4
-Approved PR: https://github.com/remla25-team11/operation/pull/3
+Created PR: https://github.com/remla25-team11/operation/pull/4 (related to A2)
+Approved PR: https://github.com/remla25-team11/operation/pull/3 (related to A2)
 
 -- Taoufik: --
 Created PR: https://github.com/remla25-team11/operation/pull/5
@@ -47,8 +47,8 @@ Created PR: https://github.com/remla25-team11/operation/pull/6
 Approved PR: https://github.com/remla25-team11/operation/pull/12
 
 -- Leo: --
-Created PR: https://github.com/remla25-team11/model-service/pull/4
-Approved PR: https://github.com/remla25-team11/app/pull/6
+Created PR: https://github.com/remla25-team11/model-service/pull/4 (related to A3)
+Approved PR: https://github.com/remla25-team11/app/pull/6 (related to A3)
 
 -- Taoufik: --
 Created PR: https://github.com/remla25-team11/operation/pull/12
@@ -74,8 +74,8 @@ Created PR: [#13 - operation](https://github.com/remla25-team11/operation/pull/1
 Approved PR: https://github.com/remla25-team11/app/pull/10
 
 -- Leo: --
-Created PR: https://github.com/remla25-team11/model-training/pull/7
-Approved PR: https://github.com/remla25-team11/model-training/pull/8
+Created PR: https://github.com/remla25-team11/model-training/pull/7 (related to A4)
+Approved PR: https://github.com/remla25-team11/model-training/pull/8 (related to A4)
 
 -- Sowmya: --
 Created PR: [https://github.com/remla25-team11/model-training/pull/6](https://github.com/remla25-team11/model-training/pull/6)
@@ -98,8 +98,8 @@ Created PR: https://github.com/remla25-team11/operation/pull/15
 Approved PR: https://github.com/remla25-team11/operation/pull/14
 
 -- Leo: --
-Created PR: https://github.com/remla25-team11/operation/pull/17
-Approved PR: https://github.com/remla25-team11/operation/pull/18
+Created PR: https://github.com/remla25-team11/operation/pull/17 (related to A5)
+Approved PR: https://github.com/remla25-team11/operation/pull/18 (related to A5)
 
 -- Diego --
 Created PR: [#16 - visual support](https://github.com/remla25-team11/operation/pull/16)
