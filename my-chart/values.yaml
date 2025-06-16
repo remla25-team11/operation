@@ -135,3 +135,8 @@ rateLimit:
   maxTokens: 5
   tokensPerFill: 5
   fillInterval: 10s
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    configSecret: alertmanager-config
