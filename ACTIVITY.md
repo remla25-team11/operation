@@ -129,7 +129,6 @@ Approved PR: https://github.com/remla25-team11/operation/pull/19
 
 -- Sowmya: --
 Created PR: https://github.com/remla25-team11/model-service/pull/7, https://github.com/remla25-team11/operation/pull/21
-Approved PR: 
 
 -- Taoufik: --
 Created PR: https://github.com/remla25-team11/app/pull/11
@@ -146,3 +145,6 @@ Approved PR: https://github.com/remla25-team11/app/pull/12
 Created PR: https://github.com/remla25-team11/model-training/pull/12
 Approved PR: https://github.com/remla25-team11/operation/pull/21
 
+
+--Sowmya:--
+Approved PR: https://github.com/remla25-team11/operation/pull/22
