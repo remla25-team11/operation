@@ -137,6 +137,11 @@ Approved PR: https://github.com/remla25-team11/model-service/pull/7
 
 # Week 8
 
+-- Leo: --
+Created PR: 
+Approved PR: https://github.com/remla25-team11/model-training/pull/12
+
+
 -- Taoufik: --
 Created PR: [https://github.com/remla25-team11/app/pull/13/commits/08b4e6efe1ac7908bb9174a11fba7dcc70ce0b2f](https://github.com/remla25-team11/app/pull/13)
 https://github.com/remla25-team11/operation/pull/22
