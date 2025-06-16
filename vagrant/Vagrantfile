@@ -6,17 +6,13 @@ ENV['ANSIBLE_NOCOWS'] = '1'
 VAGRANTFILE_API_VERSION = "2"
 
 # === ADAPTED RESOURCE SETTINGS ===
-# Increased the default memory for the controller and CPUs for the workers.
-# Made controller resources configurable via environment variables for consistency.
-
-# Controller settings (configurable from your shell)
-CONTROLLER_MEMORY = ENV.fetch("CONTROLLER_MEMORY", 4096).to_i # Increased default to 4GB
-CONTROLLER_CPUS   = ENV.fetch("CONTROLLER_CPUS", 2).to_i      # Default is 2, which is good
+CONTROLLER_MEMORY = ENV.fetch("CONTROLLER_MEMORY", 4096).to_i
+CONTROLLER_CPUS   = ENV.fetch("CONTROLLER_CPUS", 2).to_i
 
 # Worker settings (configurable from your shell)
 NUM_WORKERS   = ENV.fetch("NUM_WORKERS", 2).to_i
-WORKER_MEMORY = ENV.fetch("WORKER_MEMORY", 2048).to_i         # 2GB is a solid default
-WORKER_CPUS   = ENV.fetch("WORKER_CPUS", 1).to_i              # Increased default to 1 CPUs
+WORKER_MEMORY = ENV.fetch("WORKER_MEMORY", 2048).to_i
+WORKER_CPUS   = ENV.fetch("WORKER_CPUS", 1).to_i
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "bento/ubuntu-24.04"
@@ -27,10 +23,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Define controller
   config.vm.define "ctrl" do |ctrl|
     ctrl.vm.hostname = "ctrl"
+    # Reverting to the private_network on the original IP
     ctrl.vm.network "private_network", ip: "192.168.56.100"
     ctrl.vm.provider "virtualbox" do |vb|
       vb.memory = CONTROLLER_MEMORY
       vb.cpus = CONTROLLER_CPUS
+      # This line allows the VM's network card to accept traffic for MetalLB's virtual IP
+      vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
     end
   end
 
@@ -38,22 +37,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   (1..NUM_WORKERS).each do |i|
     config.vm.define "node-#{i}" do |node|
       node.vm.hostname = "node-#{i}"
+      # Reverting to the private_network on the original IPs
       node.vm.network "private_network", ip: "192.168.56.#{100 + i}"
       node.vm.provider "virtualbox" do |vb|
         vb.memory = WORKER_MEMORY
         vb.cpus = WORKER_CPUS
+        # This line allows the VM's network card to accept traffic for MetalLB's virtual IP
+        vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
       end
     end
   end
 
   # === SINGLE UNIFIED ANSIBLE PROVISIONER ===
-  # This block runs ONCE from your host machine after all VMs are up.
   config.vm.provision "ansible", run: "once" do |ansible|
-    # Point to the master playbook
     ansible.playbook = "../ansible/site.yaml"
-
-    # Let Vagrant dynamically generate the inventory with the correct
-    # groups ('controller', 'workers') for your playbooks to use.
     ansible.groups = {
       "controller" => ["ctrl"],
       "workers"    => (1..NUM_WORKERS).map { |i| "node-#{i}" }

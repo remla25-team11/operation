@@ -1,0 +1,28 @@
+{{- if .Values.istioGateway.enabled -}}
+apiVersion: networking.istio.io/v1beta1 # Using v1beta1, common for recent Istio
+kind: Gateway
+metadata:
+  name: {{ .Values.istioGateway.name }}
+  namespace: {{ .Values.global.namespace }} # Deploy Gateway in app namespace for this example
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
+spec:
+  selector:
+    istio: ingressgateway # Standard selector for default Istio ingress gateway
+    {{- with .Values.istioGateway.selector }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        {{- range .Values.istioVirtualService.hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      # You can add TLS configuration here if needed
+      # tls:
+      #   mode: SIMPLE
+      #   credentialName: my-tls-secret # k8s secret in istio-system namespace
+{{- end }}

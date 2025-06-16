@@ -1,112 +1,180 @@
+# operation/ansible/node.yaml
 ---
 - name: Provision Kubernetes worker nodes
   hosts: workers
   become: true
   vars:
+    # --- Kubernetes Installation Variables (MUST MATCH ctrl.yaml) ---
+    kubernetes_version_short: "v1.30"
+    kube_packages_version_suffix: "=1.30.0-1.1" # Specific package version string for apt
+
     kube_packages:
       - containerd
       - runc
-      - kubelet=1.32.4-1.1
-      - kubeadm=1.32.4-1.1
-      - kubectl=1.32.4-1.1
-    kubernetes_apt_key_url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key
-    kubernetes_apt_repo: "deb https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /"
-    hosts_entries:
+      - "kubelet{{ kube_packages_version_suffix }}"
+      - "kubeadm{{ kube_packages_version_suffix }}"
+      - "kubectl{{ kube_packages_version_suffix }}" # Though kubectl isn't strictly needed on workers, good to keep consistent
+
+    # URL for the Kubernetes GPG key
+    kubernetes_apt_key_url: "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version_short }}/deb/Release.key"
+    # Path where the GPG key will be stored
+    kubernetes_apt_key_path: "/etc/apt/keyrings/kubernetes-apt-keyring.gpg"
+    # Core URL for the Kubernetes APT repository
+    kubernetes_apt_repo_core_url: "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version_short }}/deb/"
+    kubernetes_sources_list_file: "/etc/apt/sources.list.d/kubernetes.list" # Define var for clarity
+
+    hosts_entries: # Ensure these are correct for worker context if needed, or remove if not used in node.yaml
       - { ip: "192.168.56.100", name: "ctrl" }
       - { ip: "192.168.56.101", name: "node-1" }
       - { ip: "192.168.56.102", name: "node-2" }
 
   tasks:
     - name: Disable swap
-      shell: swapoff -a
+      ansible.builtin.shell: swapoff -a
+      changed_when: false
 
     - name: Remove swap from fstab
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/fstab
         regexp: '^\s*[^#]+\s+swap\s+'
         state: absent
 
-    - name: Load required kernel modules
-      copy:
+    - name: Ensure k8s.conf for kernel modules exists and has content
+      ansible.builtin.copy:
         dest: /etc/modules-load.d/k8s.conf
         content: |
           overlay
           br_netfilter
+        mode: '0644'
 
-    - name: Load modules now
-      modprobe:
-        name: "{{ item }}"
-      loop: [overlay, br_netfilter]
+    - name: Load required kernel modules (overlay)
+      community.general.modprobe:
+        name: overlay
+        state: present
+    - name: Load required kernel modules (br_netfilter)
+      community.general.modprobe:
+        name: br_netfilter
+        state: present
 
-    - name: Set sysctl values
-      sysctl:
+    - name: Ensure /etc/sysctl.d/k8s.conf exists for k8s networking settings
+      ansible.builtin.file:
+        path: /etc/sysctl.d/k8s.conf
+        state: touch
+        mode: '0644'
+
+    - name: Set sysctl values for k8s networking
+      ansible.posix.sysctl:
         name: "{{ item.name }}"
         value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/k8s.conf
         state: present
         reload: yes
       loop:
-        - { name: net.ipv4.ip_forward, value: 1 }
-        - { name: net.bridge.bridge-nf-call-iptables, value: 1 }
-        - { name: net.bridge.bridge-nf-call-ip6tables, value: 1 }
+        - { name: net.ipv4.ip_forward, value: "1" }
+        - { name: net.bridge.bridge-nf-call-iptables, value: "1" }
+        - { name: net.bridge.bridge-nf-call-ip6tables, value: "1" }
 
-    - name: Add hosts file entries
-      lineinfile:
+    - name: Add hosts file entries (if necessary for workers)
+      ansible.builtin.lineinfile:
         path: /etc/hosts
         line: "{{ item.ip }} {{ item.name }}"
         state: present
       loop: "{{ hosts_entries }}"
 
-    - name: Add Kubernetes apt key
-      apt_key:
-        url: "{{ kubernetes_apt_key_url }}"
+    # --- APT Setup for Kubernetes (MUST MATCH ctrl.yaml logic) ---
+    - name: Update apt cache and install prerequisite packages (run once before K8s repo setup)
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
         state: present
-
-    - name: Add Kubernetes apt repo
-      apt_repository:
-        repo: "{{ kubernetes_apt_repo }}"
-        state: present
-        filename: kubernetes
-
-    - name: Update apt cache
-      apt:
         update_cache: yes
 
-    - name: Install Kubernetes + containerd packages
-      apt:
-        name: "{{ kube_packages }}"
-        state: present
+    - name: Ensure apt keyrings directory exists
+      ansible.builtin.file:
+        path: "/etc/apt/keyrings"
+        state: directory
+        mode: '0755'
 
-    - name: Ensure containerd config directory exists
-      file:
+    - name: Remove old/existing Kubernetes GPG key file (if any, for a clean state)
+      ansible.builtin.file:
+        path: "{{ kubernetes_apt_key_path }}"
+        state: absent
+
+    - name: Remove old/existing Kubernetes sources list file (if any, for a clean state)
+      ansible.builtin.file:
+        path: "{{ kubernetes_sources_list_file }}"
+        state: absent
+
+    - name: Download Kubernetes public signing key and store it
+      ansible.builtin.shell: # Using shell for robust download and dearmor
+        cmd: "curl -fsSL \"{{ kubernetes_apt_key_url }}\" | gpg --dearmor -o \"{{ kubernetes_apt_key_path }}\""
+      changed_when: true # Assume change as we deleted the key file before
+
+    - name: Ensure correct permissions for the Kubernetes GPG key
+      ansible.builtin.file:
+        path: "{{ kubernetes_apt_key_path }}"
+        mode: '0644'
+        state: file
+
+    - name: Add Kubernetes apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by={{ kubernetes_apt_key_path }}] {{ kubernetes_apt_repo_core_url }} /"
+        state: present
+        filename: "kubernetes" # Creates /etc/apt/sources.list.d/kubernetes.list
+        update_cache: yes # Update cache AFTER adding the new repo and key
+    # --- End APT Setup for Kubernetes ---
+
+    - name: Install Kubernetes & Containerd packages on worker
+      ansible.builtin.apt:
+        name: "{{ kube_packages }}" # Uses the same versions as ctrl node
+        state: present
+        allow_change_held_packages: yes # In case versions were previously held
+
+    - name: Hold Kubernetes package versions on worker
+      ansible.builtin.dpkg_selections:
+        name: "{{ item | regex_replace('=.*$', '') }}"
+        selection: hold
+      loop: "{{ kube_packages | select('match', '^kube.*') | list }}"
+
+    - name: Ensure containerd config directory exists on worker
+      ansible.builtin.file:
         path: /etc/containerd
         state: directory
 
-    - name: Generate default containerd config
-      shell: "containerd config default > /etc/containerd/config.toml"
+    - name: Generate default containerd config and configure for Kubernetes on worker
+      ansible.builtin.shell: |
+        containerd config default > /etc/containerd/config.toml
+        sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
       args:
-        creates: /etc/containerd/config.toml
+        creates: /etc/containerd/config.toml # Idempotency
+      changed_when: true # Assume it always changes if it runs
 
-    - name: Configure containerd for Kubernetes
-      lineinfile:
-        path: /etc/containerd/config.toml
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-      loop:
-        - { regexp: '^(\s*)SystemdCgroup\s*=.*$', line: '          SystemdCgroup = true' }
-        - { regexp: '^(\s*)disable_apparmor\s*=.*$', line: '        disable_apparmor = true' }
-        - { regexp: '^(\s*)sandbox_image\s*=.*$', line: '        sandbox_image = "registry.k8s.io/pause:3.10"' }
-
-    - name: Restart containerd
-      service:
+    - name: Restart containerd service on worker
+      ansible.builtin.service:
         name: containerd
         state: restarted
         enabled: yes
 
+    - name: Reset kubeadm on worker (if it was ever partially joined or failed)
+      ansible.builtin.shell: kubeadm reset -f
+      args:
+        warn: false
+      changed_when: true # Always consider this a change for join to proceed cleanly
+      failed_when: false # Don't fail if nothing to reset
+
     - name: Fetch kubeadm join command from controller using slurp
       ansible.builtin.slurp:
-        src: /tmp/kubeadm_join_command.txt
-      delegate_to: ctrl
+        src: /tmp/kubeadm_join_command.txt # Path where ctrl node saved the join command
+      delegate_to: ctrl # This task runs on ctrl to fetch the file
       register: join_command_slurped
+      # Ensure this runs only if the join command file is expected to be there
+      when: hostvars['ctrl']['kubeadm_init_result']['changed'] is defined and hostvars['ctrl']['kubeadm_init_result']['changed']
 
     - name: Run kubeadm join on workers
-      shell: "{{ join_command_slurped['content'] | b64decode }}"
+      ansible.builtin.shell: "{{ join_command_slurped['content'] | b64decode | trim }}" # trim to remove potential newlines
+      when: join_command_slurped.content is defined and join_command_slurped.content != ""
+      register: kubeadm_join_result
+      changed_when: "'This node has joined the cluster' in kubeadm_join_result.stdout"

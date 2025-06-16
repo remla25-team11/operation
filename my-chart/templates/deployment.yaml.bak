@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "my_chart.fullname" . }}
+  name: {{ include "app-chart.fullname" . }}
   labels:
-    {{- include "my_chart.labels" . | nindent 4 }}
+    {{- include "app-chart.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "my_chart.selectorLabels" . | nindent 6 }}
+      {{- include "app-chart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "my_chart.selectorLabels" . | nindent 8 }}
+        {{- include "app-chart.selectorLabels" . | nindent 8 }}
         # Add these so the EnvoyFilter can find this pod
         app: app
         version: "v2"
@@ -30,7 +30,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "my_chart.serviceAccountName" . }}
+      serviceAccountName: {{ include "app-chart.serviceAccountName" . }}
       securityContext:
         {{- with .Values.podSecurityContext }}
         {{- toYaml . | nindent 8 }}

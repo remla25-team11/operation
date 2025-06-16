@@ -1,0 +1,22 @@
+{{- $serviceName := "nginx-frontend" -}}
+{{- $servicePort := .Values.nginxFrontendV1.service.port -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "app-chart.fullname" . }}-{{ $serviceName }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ $serviceName }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ $servicePort }}
+      targetPort: http # Targets the 'http' port name on the pods
+      protocol: TCP
+      name: http
+  selector:
+    # This selector now correctly and robustly targets both v1 and v2 pods
+    # by using the common 'app-role' label defined in our helper.
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app-role: nginx-frontend

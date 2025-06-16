@@ -1,24 +1,28 @@
-apiVersion: networking.istio.io/v1beta1
+apiVersion: networking.istio.io/v1alpha3 # Or v1beta1
 kind: VirtualService
 metadata:
-  name: app
-  namespace: default
+  name: {{ .Values.istioVirtualService.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
 spec:
   hosts:
-    - "*"
+    {{- range .Values.istioVirtualService.hosts }}
+    - {{ . | quote }}
+    {{- end }}
   gateways:
-    - my-gateway
+    - {{ .Values.istioGateway.name }} # Assumes gateway is in the same namespace
+    # If gateway is in istio-system, use:
+    # - istio-system/{{ .Values.istioGateway.name }}
+    # Or use mesh for internal services (if this VS was for app-backend to model-backend)
+    # - mesh
   http:
-    - match:
-        - headers:
-            user:
-              exact: test-user
-      route:
-        - destination:
-            host: app
-            subset: v2
     - route:
         - destination:
-            host: app
+            host: {{ include "app-chart.fullname" . }}-{{ .Values.istioVirtualService.nginxFrontendServiceHost }} # e.g. myrelease-nginx-frontend
             subset: v1
-
+          weight: {{ .Values.istioVirtualService.routing.v1.weight }}
+        - destination:
+            host: {{ include "app-chart.fullname" . }}-{{ .Values.istioVirtualService.nginxFrontendServiceHost }}
+            subset: v2
+          weight: {{ .Values.istioVirtualService.routing.v2.weight }}

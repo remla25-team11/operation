@@ -1,0 +1,62 @@
+# operation/ansible/files/prometheus-stack-values.yaml
+
+# Grafana Configuration
+grafana:
+  adminPassword: 'admin' # This will be a string
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - grafana.local # This will be a string
+    # Default paths will be used by the chart, typically '/' with Prefix
+    # If you need to specify paths explicitly:
+    # paths:
+    #   - /
+    # pathType: Prefix # This might also need to be under each path entry if specified
+    # For now, let's rely on chart defaults for paths if just host is given.
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard # String
+      labelValue: "1" # Explicitly a string "1"
+
+# Prometheus Configuration
+prometheus:
+  ingress:
+    enabled: false # Keep this disabled as per our debugging step
+
+# Alertmanager Configuration
+alertmanager:
+  ingress:
+    enabled: false # Keep this disabled as per our debugging step
+
+# prometheus-operator tolerations (ensure values are strings if they could be numeric)
+prometheusOperator:
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane" # String
+      operator: "Exists" # String
+      effect: "NoSchedule" # String
+
+# Disable components not needed for a typical k8s cluster monitoring
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+coreDns: # If you have coredns and want to monitor it, enable; otherwise false
+  enabled: false
+kubeProxy: # If you have kube-proxy and want to monitor it, enable; otherwise false
+  enabled: false
+
+# Other important values you might have been setting (ensure correct types)
+# Example: if any of these took numbers that should be strings in the chart
+# defaultRules:
+#   create: true
+#   rules:
+#     alertmanager: true
+#     etcd: true # if kubeEtcd.enabled
+#     # ... and so on
+
+# Make sure any numeric IDs like UIDs/GIDs are actual numbers, not strings, if the chart expects numbers.
+# And any string values (even if numeric like "80") are quoted.

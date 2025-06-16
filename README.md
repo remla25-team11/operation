@@ -20,6 +20,79 @@ For monitoring, **Prometheus** scrapes metrics from services and Istio proxies. 
 
 (Diagram created using [draw.io](https://www.drawio.com/))
 
+
+
+---
+
+### Prerequisites
+
+Before you begin, ensure you have the following software installed on your host machine:
+- Vagrant: To manage the virtual machines.
+- VirtualBox: As the virtualization provider for Vagrant.
+- kubectl: The Kubernetes command-line tool.
+- Helm: The package manager for Kubernetes.
+
+Note: This environment requires significant system resources. It is recommended to have at least 8GB of free RAM.
+
+## Deployment Instructions
+
+
+### Step 1: Navigate and Start the Vagrant Environment
+
+First, change into the vagrant directory and run vagrant up. This command will create and provision three virtual machines (one controller, two workers), install all necessary system software, and set up the Kubernetes cluster.
+
+This is the most time-consuming step and can take 15-30 minutes depending on your internet connection and computer's performance.
+
+```
+cd operation/vagrant
+vagrant up
+```
+
+### Step 2: Configure Your Environment for Cluster Access
+
+Once vagrant up completes successfully, the Kubernetes cluster is running. You now need to configure your local command-line tools (kubectl and helm) to communicate with it.
+
+Navigate back to the project's root directory and set the `KUBECONFIG` environment variable.
+
+**Navigate back to the project root**
+
+`cd ../..`
+
+**Set the KUBECONFIG environment variable for this terminal session**
+
+`export KUBECONFIG="$(pwd)/operation/ansible/kubeconfig"`
+
+### Step 3: Deploy the Application with Helm
+
+With your environment configured, you can now deploy the entire application stack using the provided Helm chart.
+
+The following command will install all the components into the sentiment-app namespace. 
+The --wait flag will cause the command to wait until all application pods are in a Running and Ready state.
+
+```
+helm install my-app ./operation/my-chart \
+  --namespace sentiment-app \
+  --create-namespace \
+  --wait
+```
+
+Once all the pods have successfully started you can access the application with the following IP:
+
+**192.168.56.100:31900**
+
+
+### Cleaning Up
+
+When you are finished, you can completely destroy the virtual environment and remove all associated resources with a single command.
+
+**Navigate to the vagrant directory**
+
+`cd operation/vagrant`
+
+**Destroy all VMs**
+
+`vagrant destroy -f`
+
 ---
 
 ## Deployed Services

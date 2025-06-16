@@ -1,5 +1,5 @@
 ---
-- name: Disable SSH host key checking
+- name: Disable SSH host key checking on controller
   hosts: ctrl
   become: true
   tasks:
@@ -7,10 +7,10 @@
       ansible.builtin.file:
         path: /etc/ansible
         state: directory
-        mode: '0755' # Standard permissions for directories
+        mode: '0755'
 
     - name: Create Ansible config to disable host key checking
-      copy:
+      ansible.builtin.copy:
         dest: /etc/ansible/ansible.cfg
         content: |
           [defaults]
@@ -20,260 +20,265 @@
   hosts: ctrl
   become: true
   vars:
+    kubernetes_version_short: "v1.30"
+    kube_packages_version_suffix: "=1.30.0-1.1"
     kube_packages:
       - containerd
       - runc
-      - kubelet=1.32.4-1.1
-      - kubeadm=1.32.4-1.1
-      - kubectl=1.32.4-1.1
-    kubernetes_apt_key_url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key
-    kubernetes_apt_repo: "deb https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /"
+      - "kubelet{{ kube_packages_version_suffix }}"
+      - "kubeadm{{ kube_packages_version_suffix }}"
+      - "kubectl{{ kube_packages_version_suffix }}"
+    kubernetes_apt_key_url: "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version_short }}/deb/Release.key"
+    kubernetes_apt_key_path: "/etc/apt/keyrings/kubernetes-apt-keyring.gpg"
+    kubernetes_apt_repo_core_url: "https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version_short }}/deb/"
+    kubernetes_sources_list_file: "/etc/apt/sources.list.d/kubernetes.list"
     hosts_entries:
       - { ip: "192.168.56.100", name: "ctrl" }
       - { ip: "192.168.56.101", name: "node-1" }
       - { ip: "192.168.56.102", name: "node-2" }
     istio_version: "1.22.1"
+    prometheus_stack_values_file_src: "files/prometheus-stack-values.yaml" # Relative to playbook
+    prometheus_stack_values_file_dest: "/tmp/prometheus-stack-values.yaml" # On the VM
 
   tasks:
-
     - name: Disable swap
-      shell: swapoff -a
+      ansible.builtin.shell: swapoff -a
+      changed_when: false
 
     - name: Remove swap from fstab
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/fstab
         regexp: '^\s*[^#]+\s+swap\s+'
         state: absent
 
-    - name: Load required kernel modules
-      copy:
+    - name: Ensure k8s.conf for kernel modules exists and has content
+      ansible.builtin.copy:
         dest: /etc/modules-load.d/k8s.conf
         content: |
           overlay
           br_netfilter
+        mode: '0644'
 
-    - name: Load modules now
-      modprobe:
-        name: "{{ item }}"
-      loop: [overlay, br_netfilter]
+    - name: Load required kernel modules (overlay)
+      community.general.modprobe:
+        name: overlay
+        state: present
+    - name: Load required kernel modules (br_netfilter)
+      community.general.modprobe:
+        name: br_netfilter
+        state: present
 
-    - name: Set sysctl values
-      sysctl:
+    - name: Ensure /etc/sysctl.d/k8s.conf exists for k8s networking settings
+      ansible.builtin.file:
+        path: /etc/sysctl.d/k8s.conf
+        state: touch
+        mode: '0644'
+
+    - name: Set sysctl values for k8s networking
+      ansible.posix.sysctl:
         name: "{{ item.name }}"
         value: "{{ item.value }}"
+        sysctl_file: /etc/sysctl.d/k8s.conf
         state: present
         reload: yes
       loop:
-        - { name: net.ipv4.ip_forward, value: 1 }
-        - { name: net.bridge.bridge-nf-call-iptables, value: 1 }
-        - { name: net.bridge.bridge-nf-call-ip6tables, value: 1 }
+        - { name: net.ipv4.ip_forward, value: "1" }
+        - { name: net.bridge.bridge-nf-call-iptables, value: "1" }
+        - { name: net.bridge.bridge-nf-call-ip6tables, value: "1" }
 
     - name: Add hosts file entries
-      lineinfile:
+      ansible.builtin.lineinfile:
         path: /etc/hosts
         line: "{{ item.ip }} {{ item.name }}"
         state: present
       loop: "{{ hosts_entries }}"
 
-    - name: Add Kubernetes apt key
-      apt_key:
-        url: "{{ kubernetes_apt_key_url }}"
-        state: present
-
-    - name: Add Kubernetes apt repo
-      apt_repository:
-        repo: "{{ kubernetes_apt_repo }}"
-        state: present
-        filename: kubernetes
-
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-
-    - name: Install Ansible on controller
-      apt:
-        name: ansible
+    # --- APT Setup for Kubernetes ---
+    - name: Update apt cache and install prerequisite packages (run once before K8s repo setup)
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
         state: present
         update_cache: yes
 
-    - name: Install Kubernetes + containerd packages
-      apt:
+    - name: Ensure apt keyrings directory exists
+      ansible.builtin.file:
+        path: "/etc/apt/keyrings"
+        state: directory
+        mode: '0755'
+
+    - name: Remove old/existing Kubernetes GPG key file (if any, for a clean state)
+      ansible.builtin.file:
+        path: "{{ kubernetes_apt_key_path }}"
+        state: absent
+
+    - name: Remove old/existing Kubernetes sources list file (if any, for a clean state)
+      ansible.builtin.file:
+        path: "{{ kubernetes_sources_list_file }}"
+        state: absent
+
+    - name: Download Kubernetes public signing key and store it
+      ansible.builtin.shell:
+        cmd: "curl -fsSL \"{{ kubernetes_apt_key_url }}\" | gpg --dearmor -o \"{{ kubernetes_apt_key_path }}\""
+      changed_when: true
+
+    - name: Ensure correct permissions for the Kubernetes GPG key
+      ansible.builtin.file:
+        path: "{{ kubernetes_apt_key_path }}"
+        mode: '0644'
+        state: file
+
+    - name: Add Kubernetes apt repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by={{ kubernetes_apt_key_path }}] {{ kubernetes_apt_repo_core_url }} /"
+        state: present
+        filename: "kubernetes"
+        update_cache: yes
+    # --- End APT Setup for Kubernetes ---
+
+    - name: Install Kubernetes & Containerd packages
+      ansible.builtin.apt:
         name: "{{ kube_packages }}"
         state: present
+        allow_change_held_packages: yes
+
+    - name: Hold Kubernetes package versions
+      ansible.builtin.dpkg_selections:
+        name: "{{ item | regex_replace('=.*$', '') }}"
+        selection: hold
+      loop: "{{ kube_packages | select('match', '^kube.*') | list }}"
 
     - name: Ensure containerd config directory exists
-      file:
+      ansible.builtin.file:
         path: /etc/containerd
         state: directory
 
-    - name: Generate default containerd config
-      shell: "containerd config default > /etc/containerd/config.toml"
+    - name: Generate default containerd config and configure for Kubernetes
+      ansible.builtin.shell: |
+        containerd config default > /etc/containerd/config.toml
+        sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
       args:
         creates: /etc/containerd/config.toml
+      changed_when: true
 
-    - name: Configure containerd for Kubernetes
-      lineinfile:
-        path: /etc/containerd/config.toml
-        regexp: "{{ item.regexp }}"
-        line: "{{ item.line }}"
-      loop:
-        - { regexp: '^(\s*)SystemdCgroup\s*=.*$', line: '          SystemdCgroup = true' }
-        - { regexp: '^(\s*)disable_apparmor\s*=.*$', line: '        disable_apparmor = true' }
-        - { regexp: '^(\s*)sandbox_image\s*=.*$', line: '        sandbox_image = "registry.k8s.io/pause:3.10"' }
-
-    - name: Restart containerd
-      service:
+    - name: Restart containerd service
+      ansible.builtin.service:
         name: containerd
         state: restarted
         enabled: yes
 
-    # ✅ Step 13: Initialize Kubernetes cluster
-    - name: Reset Kubernetes if already initialized
-      ansible.builtin.shell: kubeadm reset -f
-      args:
-        warn: false
-      changed_when: true # Always report as changed to ensure subsequent tasks run
-      failed_when: false # Do not fail if reset fails (e.g., if not initialized)
-      become: true
-
-    - name: Check if cluster is already initialized
-      stat:
+    - name: Check if Kubernetes cluster is already initialized
+      ansible.builtin.stat:
         path: /etc/kubernetes/admin.conf
       register: kubeadm_config
 
-    - name: Initialize Kubernetes with kubeadm
-      shell: |
+    - name: Reset Kubernetes cluster if admin.conf does not exist (pre-initialization)
+      ansible.builtin.shell: kubeadm reset -f
+      args:
+        warn: false
+      changed_when: true
+      failed_when: false
+      when: not kubeadm_config.stat.exists
+
+    - name: Initialize Kubernetes cluster with kubeadm
+      ansible.builtin.shell: |
         kubeadm init \
           --apiserver-advertise-address=192.168.56.100 \
           --node-name ctrl \
           --pod-network-cidr=10.244.0.0/16
       when: not kubeadm_config.stat.exists
+      register: kubeadm_init_result
+      changed_when: "'Your Kubernetes control-plane has initialized successfully!' in kubeadm_init_result.stdout"
 
-    # ✅ Step 14: Set up kubectl for vagrant user
-    - name: Create .kube directory for vagrant
-      file:
+    - name: Create .kube directory for vagrant user
+      ansible.builtin.file:
         path: /home/vagrant/.kube
         state: directory
         owner: vagrant
         group: vagrant
-        mode: 0755
+        mode: '0755'
+      when: kubeadm_config.stat.exists or (kubeadm_init_result.changed is defined and kubeadm_init_result.changed)
 
-    - name: Copy admin.conf to vagrant kube config
-      copy:
+
+    - name: Copy admin.conf to vagrant user's .kube directory
+      ansible.builtin.copy:
         src: /etc/kubernetes/admin.conf
         dest: /home/vagrant/.kube/config
         remote_src: yes
         owner: vagrant
         group: vagrant
-        mode: 0644
+        mode: '0644'
+      when: kubeadm_config.stat.exists or (kubeadm_init_result.changed is defined and kubeadm_init_result.changed)
 
-    - name: Remove control-plane taint from ctrl node to allow scheduling
+    - name: Allow scheduling pods on the control-plane node (ensure taint is removed)
       become_user: vagrant
-      ansible.builtin.shell: "kubectl taint nodes ctrl node-role.kubernetes.io/control-plane- --overwrite"
-      changed_when: false
+      ansible.builtin.shell: "kubectl taint nodes ctrl node-role.kubernetes.io/control-plane- --overwrite --kubeconfig /home/vagrant/.kube/config"
+      register: untaint_result
+      failed_when: "untaint_result.rc != 0 and 'not found' not in untaint_result.stderr"
+      changed_when: "'untainted' in untaint_result.stdout"
+      when: kubeadm_config.stat.exists or (kubeadm_init_result.changed is defined and kubeadm_init_result.changed)
 
-    # Generate kubeadm join command and save to file
-    - name: Generate kubeadm join command
+    - name: Generate kubeadm join command for worker nodes
       ansible.builtin.shell: kubeadm token create --print-join-command
       register: join_command_output
-      become: true
-      
-    - name: Save join command to file for nodes to use
-      copy:
+      when: kubeadm_init_result.changed is defined and kubeadm_init_result.changed
+
+    - name: Save join command to a temporary file on controller
+      ansible.builtin.copy:
         content: "{{ join_command_output.stdout }}"
         dest: /tmp/kubeadm_join_command.txt
         mode: '0644'
+      when: join_command_output.stdout is defined and join_command_output.stdout != ""
 
-
-    # Step 22: Dashboard
-
-    # installing Flannel
     - name: Copy Flannel CNI manifest to controller
-      copy:
-        src: kube-flannel.yml
+      ansible.builtin.copy:
+        src: files/kube-flannel.yml
         dest: /home/vagrant/kube-flannel.yml
         owner: vagrant
         group: vagrant
-        mode: 0644
+      when: kubeadm_config.stat.exists or (kubeadm_init_result.changed is defined and kubeadm_init_result.changed)
 
-    - name: Apply Flannel Pod network
+
+    - name: Apply Flannel Pod network CNI
       become_user: vagrant
-      shell: kubectl apply -f /home/vagrant/kube-flannel.yml --kubeconfig /home/vagrant/.kube/config
+      ansible.builtin.shell: kubectl apply -f /home/vagrant/kube-flannel.yml --kubeconfig /home/vagrant/.kube/config
+      register: flannel_apply_result
+      changed_when: "'created' in flannel_apply_result.stdout or 'configured' in flannel_apply_result.stdout"
+      when: kubeadm_config.stat.exists or (kubeadm_init_result.changed is defined and kubeadm_init_result.changed)
 
-    - name: Wait for Flannel pods to be ready (robust check)
+    - name: Wait for at least one Flannel pod to be Running
       become_user: vagrant
-      shell: |
-        set -e
-        POD_NAME=""
-        for i in $(seq 1 60); do # Try for 5 minutes (60 * 5s = 300s)
-          POD_NAME=$(kubectl get pods -n kube-flannel -l app=flannel -o jsonpath='{.items[0].metadata.name}' --kubeconfig /home/vagrant/.kube/config 2>/dev/null || true)
-          if [ -n "$POD_NAME" ]; then
-            STATUS=$(kubectl get pod "$POD_NAME" -n kube-flannel -o jsonpath='{.status.phase}' --kubeconfig /home/vagrant/.kube/config)
-            READY_COND=$(kubectl get pod "$POD_NAME" -n kube-flannel -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' --kubeconfig /home/vagrant/.kube/config)
-            if [ "$STATUS" == "Running" ] && [ "$READY_COND" == "True" ]; then
-              echo "Flannel pod $POD_NAME is Running and Ready."
-              exit 0
-            fi
-          fi
-          echo "Waiting for Flannel pod to be Running and Ready (attempt $i/60)..."
-          sleep 5
-        done
-        echo "Flannel pod did not become Running and Ready within timeout."
-        exit 1
-      args:
-        executable: /bin/bash
+      ansible.builtin.shell: "kubectl get pods -n kube-flannel -l app=flannel --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}' --kubeconfig /home/vagrant/.kube/config"
+      register: flannel_pod_running
+      until: flannel_pod_running.stdout != ""
+      retries: 30
+      delay: 10
+      changed_when: false
+      ignore_errors: yes
+      when: kubeadm_config.stat.exists or (kubeadm_init_result.changed is defined and kubeadm_init_result.changed)
 
-    # installing Helm
-    - name: Add Helm GPG key
-      apt_key:
-        url: https://baltocdn.com/helm/signing.asc
-        state: present
-
-    - name: Add Helm apt repository
-      apt_repository:
-        repo: "deb https://baltocdn.com/helm/stable/debian/ all main"
-        state: present
-        filename: helm-stable
 
     - name: Install Helm
-      apt:
-        name: helm
-        state: present
-        update_cache: yes
-    # ingress for dashboard
-
-    - name: Create kubernetes-dashboard namespace
-      become_user: vagrant
-      shell: kubectl create namespace kubernetes-dashboard --kubeconfig /home/vagrant/.kube/config
-      ignore_errors: true # Ignore if namespace already exists
-
-    - name: Copy Dashboard Ingress manifest
-      copy:
-        src: dashboard-ingress.yaml
-        dest: /home/vagrant/dashboard-ingress.yaml
-        owner: vagrant
-        group: vagrant
-        mode: 0644
-
-    - name: Apply Dashboard Ingress
-      become_user: vagrant
-      shell: kubectl apply -f /home/vagrant/dashboard-ingress.yaml --kubeconfig /home/vagrant/.kube/config
-
-
-
-    - name: Add Kubernetes Dashboard Helm repo
-      become_user: vagrant
-      shell: helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
+      ansible.builtin.shell: |
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        chmod 700 get_helm.sh
+        ./get_helm.sh
       args:
-        creates: /home/vagrant/.dashboard_repo_added
+        creates: /usr/local/bin/helm
+      changed_when: true
 
-    - name: Update Helm repositories
+    # Kubernetes Dashboard
+    - name: Add Kubernetes Dashboard Helm repo and update
       become_user: vagrant
-      shell: helm repo update
+      ansible.builtin.shell: helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/ && helm repo update
+      changed_when: false
 
-    - name: Install Kubernetes Dashboard via Helm
+    - name: Install/Upgrade Kubernetes Dashboard via Helm
       become_user: vagrant
-      shell: |
+      ansible.builtin.shell: |
         helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard \
           --namespace kubernetes-dashboard --create-namespace \
           --kubeconfig /home/vagrant/.kube/config \
@@ -284,168 +289,114 @@
           --set ingress.hosts[0].host=dashboard.local \
           --set ingress.hosts[0].paths[0].path=/ \
           --set ingress.hosts[0].paths[0].pathType=ImplementationSpecific \
+          --set service.externalPort=443 \
+          --set protocolHttp=true \
           --set tolerations[0].key=node-role.kubernetes.io/control-plane \
           --set tolerations[0].operator=Exists \
-          --set tolerations[0].effect=NoSchedule
+          --set tolerations[0].effect=NoSchedule \
+          --wait
+      changed_when: true
 
     - name: Copy admin-user manifest for Dashboard access
       ansible.builtin.copy:
-        src: admin-user.yaml  # This file must exist in your ansible/ directory
+        src: files/admin-user.yaml
         dest: /home/vagrant/admin-user.yaml
-        owner: vagrant
-        group: vagrant
-        mode: '0644'
 
-    - name: Apply admin-user.yaml to create service account and binding
+    - name: Apply admin-user for Dashboard access
       become_user: vagrant
-      shell: kubectl apply -f /home/vagrant/admin-user.yaml --kubeconfig /home/vagrant/.kube/config
+      ansible.builtin.shell: kubectl apply -f /home/vagrant/admin-user.yaml --kubeconfig /home/vagrant/.kube/config
+      changed_when: false
 
-    #MetalLB
-    - name: Ensure python3-venv is installed on ctrl
-      ansible.builtin.apt:
-        name: python3-venv
-        state: present
-        update_cache: yes
-      become: true
-      delegate_to: ctrl
-
-    - name: Create virtual environment for Ansible k8s module on ctrl
-      ansible.builtin.command: python3 -m venv /opt/venv/ansible
-      args:
-        creates: /opt/venv/ansible/bin/activate
-      become: true
-      delegate_to: ctrl
-
-    - name: Install Python Kubernetes client and OpenShift client for Ansible k8s module
-      ansible.builtin.pip:
-        name:
-          - kubernetes
-          - openshift
-        virtualenv: /opt/venv/ansible
-        virtualenv_python: python3
-      become: true # This needs sudo on the remote host
-      delegate_to: ctrl # This needs to run on the ctrl VM
-      
-    - name: Set ansible_python_interpreter for ctrl to use the virtual environment
-      ansible.builtin.set_fact:
-        ansible_python_interpreter: /opt/venv/ansible/bin/python3
-      delegate_to: ctrl # This fact needs to be set for the ctrl host
-
-    - name: Create metallb-system namespace
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: metallb-system
+    # MetalLB
+    - name: Create metallb-system namespace if not exists
       become_user: vagrant
-      args:
-        kubeconfig: /home/vagrant/.kube/config
+      ansible.builtin.shell: kubectl create namespace metallb-system --dry-run=client -o yaml | kubectl apply -f - --kubeconfig /home/vagrant/.kube/config
+      changed_when: false
 
-    - name: Generate MetalLB memberlist secret key
-      ansible.builtin.shell: openssl rand -base64 128 | tr -d '\n'
-      register: memberlist_secret_key
-      run_once: true
-      delegate_to: localhost
-      become: false # Ensure this task runs without sudo on localhost
+    - name: Install MetalLB using manifests from synced folder
+      become_user: vagrant
+      ansible.builtin.shell: kubectl apply -f /ansible/files/metallb-native.yaml --kubeconfig /home/vagrant/.kube/config
+      changed_when: false
 
-    - name: Create MetalLB memberlist secret
-      kubernetes.core.k8s:
-        state: present
-        definition:
-          apiVersion: v1
-          kind: Secret
-          metadata:
-            name: memberlist
-            namespace: metallb-system
-          stringData:
-            secretkey: "{{ memberlist_secret_key.stdout }}"
+    - name: Wait for MetalLB controller deployment to be ready
       become_user: vagrant
-      args:
-        kubeconfig: /home/vagrant/.kube/config
+      ansible.builtin.shell: kubectl wait deployment controller -n metallb-system --for=condition=Available=True --timeout=120s --kubeconfig /home/vagrant/.kube/config
+      changed_when: false
 
-    - name: Install MetalLB CRDs and components
+    - name: Apply MetalLB IPAddressPool configuration
       become_user: vagrant
-      shell: kubectl apply -f /ansible/metallb-native.yaml --kubeconfig /home/vagrant/.kube/config
-      #wait
-    - name: Wait for MetalLB webhook/controller to be ready
-      become_user: vagrant
-      shell: |
-        kubectl wait deployment controller \
-          -n metallb-system \
-          --for=condition=Available=True \
-          --timeout=90s \
-          --kubeconfig /home/vagrant/.kube/config
+      ansible.builtin.shell: kubectl apply -f /ansible/files/ipaddresspool.yaml --kubeconfig /home/vagrant/.kube/config
+      changed_when: false
 
-    - name: Apply MetalLB IP address pool
+    - name: Apply MetalLB L2Advertisement configuration
       become_user: vagrant
-      shell: kubectl apply -f /ansible/ipaddresspool.yaml --kubeconfig /home/vagrant/.kube/config
+      ansible.builtin.shell: kubectl apply -f /ansible/files/l2advertisement.yaml --kubeconfig /home/vagrant/.kube/config
+      changed_when: false
 
-    - name: Apply MetalLB L2 advertisement
+    # NGINX Ingress Controller
+    - name: Add ingress-nginx Helm repo and update
       become_user: vagrant
-      shell: kubectl apply -f /ansible/l2advertisement.yaml --kubeconfig /home/vagrant/.kube/config
+      ansible.builtin.shell: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx && helm repo update
+      changed_when: false
 
-    # ingress-nginx helm
-    - name: Add ingress-nginx Helm repo
+    - name: Install/Upgrade NGINX Ingress Controller via Helm
       become_user: vagrant
-      shell: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-
-    - name: Update Helm repos (for Ingress)
-      become_user: vagrant
-      shell: helm repo update
-
-    - name: Uninstall NGINX Ingress Controller if it exists in a pending state
-      become_user: vagrant
-      shell: helm uninstall ingress-nginx --namespace ingress-nginx
-      args:
-        warn: false
+      ansible.builtin.shell: |
+        helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+          --namespace ingress-nginx --create-namespace \
+          --kubeconfig /home/vagrant/.kube/config \
+          --set controller.service.type=LoadBalancer \
+          --set controller.ingressClassResource.name=nginx \
+          --set controller.ingressClassResource.default=true \
+          --set controller.ingressClassResource.controllerValue="k8s.io/ingress-nginx" \
+          --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
+          --set controller.tolerations[0].key=node-role.kubernetes.io/control-plane \
+          --set controller.tolerations[0].operator=Exists \
+          --set controller.tolerations[0].effect=NoSchedule \
+          --set controller.admissionWebhooks.patch.tolerations[0].key=node-role.kubernetes.io/control-plane \
+          --set controller.admissionWebhooks.patch.tolerations[0].operator=Exists \
+          --set controller.admissionWebhooks.patch.tolerations[0].effect=NoSchedule \
+          --wait
       changed_when: true
-      failed_when: false # Ignore errors if release not found or already uninstalled
 
-    # Add this task to your ctrl.yaml playbook
-    - name: Copy admin.conf to synced folder for host access
-      become: true
-      ansible.builtin.copy:
-        src: /etc/kubernetes/admin.conf
-        dest: /ansible/kubeconfig  # This will place it in the host's ansible/ folder
-        remote_src: yes
-        owner: vagrant # Set vagrant as owner for easy access from host
-        group: vagrant
-        mode: '0644'
-
-    # ---------------------------------------------------------------------------
-    # ISTIO SERVICE MESH INSTALLATION
-    # ---------------------------------------------------------------------------
-    - name: "Download Istio v{{ istio_version }}"
+    # Istio Service Mesh
+    - name: Download Istio v{{ istio_version }}
       ansible.builtin.get_url:
         url: "https://github.com/istio/istio/releases/download/{{ istio_version }}/istio-{{ istio_version }}-linux-amd64.tar.gz"
         dest: "/tmp/istio-{{ istio_version }}.tar.gz"
         mode: '0644'
 
-    - name: "Unarchive Istio to vagrant home"
+    - name: Ensure Istio installation directory exists (/home/vagrant/istio-{{ istio_version }})
+      ansible.builtin.file:
+        path: "/home/vagrant/istio-{{ istio_version }}"
+        state: directory
+        owner: vagrant
+        group: vagrant
+
+    - name: Unarchive Istio to /home/vagrant/ (will create istio-{{ istio_version }} subdir)
       ansible.builtin.unarchive:
         src: "/tmp/istio-{{ istio_version }}.tar.gz"
         dest: /home/vagrant/
         owner: vagrant
         group: vagrant
-        remote_src: yes # This is crucial, as the archive is on the remote machine
+        remote_src: yes
+        creates: "/home/vagrant/istio-{{ istio_version }}/bin/istioctl"
 
-    - name: "Check if Istio is already installed (idempotency)"
+    - name: Check if Istio (istiod deployment) is already installed
       become_user: vagrant
       ansible.builtin.shell: "kubectl get deployment istiod -n istio-system --kubeconfig /home/vagrant/.kube/config"
       register: istio_check
       ignore_errors: true
       changed_when: false
 
-    - name: "Install Istio using the 'minimal' profile"
+    - name: Install Istio using 'demo' profile
       become_user: vagrant
       ansible.builtin.shell:
-        cmd: "./istio-{{ istio_version }}/bin/istioctl install --set profile=minimal -y"
-        chdir: /home/vagrant # Run the command from the vagrant home directory
-      when: istio_check.rc != 0 # Only run this if the 'istiod' deployment was not found
+        cmd: "/home/vagrant/istio-{{ istio_version }}/bin/istioctl install --set profile=demo -y --kubeconfig /home/vagrant/.kube/config"
+      when: istio_check.rc != 0
+      changed_when: true
 
-    - name: "Wait for Istio control plane (istiod) to be ready"
+    - name: Wait for Istio control plane (istiod) deployment to be ready
       become_user: vagrant
       ansible.builtin.shell: >
         kubectl wait deployment istiod
@@ -453,20 +404,78 @@
         --namespace=istio-system
         --timeout=300s
         --kubeconfig /home/vagrant/.kube/config
-      when: istio_check.rc != 0 # Only wait if we just performed the installation
+      when: istio_check.rc != 0
+      changed_when: false
 
-    - name: Install NGINX Ingress Controller
+    - name: Wait for Istio Ingress Gateway deployment to be ready
       become_user: vagrant
-      shell: |
-        helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
-          --namespace ingress-nginx --create-namespace \
+      ansible.builtin.shell: >
+        kubectl wait deployment istio-ingressgateway
+        --for=condition=Available=True
+        --namespace=istio-system
+        --timeout=300s
+        --kubeconfig /home/vagrant/.kube/config
+      when: istio_check.rc != 0
+      changed_when: false
+
+    # Kube-Prometheus-Stack (Prometheus & Grafana)
+    - name: Add prometheus-community Helm repo and update
+      become_user: vagrant
+      ansible.builtin.shell: helm repo add prometheus-community https://prometheus-community.github.io/helm-charts && helm repo update
+      changed_when: false
+
+    - name: Copy kube-prometheus-stack values file to VM
+      ansible.builtin.copy:
+        src: "{{ prometheus_stack_values_file_src }}" # From operation/ansible/files/
+        dest: "{{ prometheus_stack_values_file_dest }}" # To /tmp/ on VM
+        mode: '0644'
+
+    - name: Install/Upgrade kube-prometheus-stack (Using values file)
+      become_user: vagrant
+      ansible.builtin.shell: |
+        helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+          --namespace monitoring --create-namespace \
           --kubeconfig /home/vagrant/.kube/config \
-          --set controller.service.type=LoadBalancer \
-          --set controller.ingressClass=nginx \
-          --set controller.tolerations[0].key=node-role.kubernetes.io/control-plane \
-          --set controller.tolerations[0].operator=Exists \
-          --set controller.tolerations[0].effect=NoSchedule \
-          --set controller.admissionWebhooks.patch.nodeSelector."kubernetes\.io/os"=linux \
-          --set controller.admissionWebhooks.patch.tolerations[0].key=node-role.kubernetes.io/control-plane \
-          --set controller.admissionWebhooks.patch.tolerations[0].operator=Exists \
-          --set controller.admissionWebhooks.patch.tolerations[0].effect=NoSchedule
+          -f "{{ prometheus_stack_values_file_dest }}" \
+          --wait --timeout=10m
+      changed_when: true
+
+    # Kiali
+    - name: Add Kiali Helm repo and update
+      become_user: vagrant
+      ansible.builtin.shell: helm repo add kiali https://kiali.org/helm-charts && helm repo update
+      changed_when: false
+
+    - name: Install/Upgrade Kiali Server via Helm
+      become_user: vagrant
+      ansible.builtin.shell: |
+        helm upgrade --install kiali-server kiali/kiali-server \
+          --namespace istio-system \
+          --kubeconfig /home/vagrant/.kube/config \
+          --set auth.strategy=anonymous \
+          --set external_services.prometheus.url="http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090" \
+          --set external_services.grafana.url="http://prometheus-grafana.monitoring.svc.cluster.local" \
+          --set external_services.tracing.enabled=true \
+          --set external_services.tracing.provider="jaeger" \
+          --set external_services.tracing.in_cluster_url="http://jaeger-query.istio-system.svc.cluster.local:16686" \
+          --set ingress.enabled=true \
+          --set ingress.class_name=nginx \
+          --set ingress.override_yaml.hosts[0].host=kiali.local \
+          --set ingress.override_yaml.hosts[0].paths[0].path=/ \
+          --set ingress.override_yaml.hosts[0].paths[0].pathType=Prefix \
+          --set deployment.tolerations[0].key=node-role.kubernetes.io/control-plane \
+          --set deployment.tolerations[0].operator=Exists \
+          --set deployment.tolerations[0].effect=NoSchedule \
+          --wait
+      changed_when: true
+
+    # Copy kubeconfig to host via synced folder
+    - name: Copy admin.conf to synced folder for host access
+      ansible.builtin.copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /ansible/kubeconfig
+        remote_src: yes
+        owner: vagrant
+        group: vagrant
+        mode: '0644'
+      when: kubeadm_config.stat.exists or (kubeadm_init_result.changed is defined and kubeadm_init_result.changed)

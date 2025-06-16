@@ -1,15 +1,19 @@
-apiVersion: networking.istio.io/v1beta1
+apiVersion: networking.istio.io/v1alpha3 # Or v1beta1, check your Istio version's preferred API
 kind: Gateway
 metadata:
-  name: my-gateway
+  name: {{ .Values.istioGateway.name }}
+  namespace: {{ .Values.global.namespace }} # Or istio-system if gateway is managed there
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
 spec:
   selector:
-    istio: ingressgateway 
+    {{- toYaml .Values.istioGateway.selector | nindent 4 }}
   servers:
     - port:
         number: 80
         name: http
         protocol: HTTP
       hosts:
-        - "*"
-
+        {{- range .Values.istioVirtualService.hosts }}
+        - {{ . | quote }}
+        {{- end }}

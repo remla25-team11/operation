@@ -1,0 +1,43 @@
+{{- if .Values.istioVirtualService.enabled -}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ .Values.istioVirtualService.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
+spec:
+  hosts:
+    {{- range .Values.istioVirtualService.hosts }}
+    - {{ . | quote }}
+    {{- end }}
+  gateways:
+    - {{ .Values.istioGateway.name }} # Assumes Gateway is in the same namespace
+    # If Gateway is in istio-system, use: istio-system/{{ .Values.istioGateway.name }}
+  http:
+    - name: "nginx-frontend-routing"
+      match:
+        - uri:
+            prefix: / # Match all traffic for the hosts
+      route:
+        - destination:
+            host: {{ include "app-chart.fullname" . }}-{{ .Values.istioVirtualService.nginxFrontendServiceHost | default "nginx-frontend" }}
+            subset: {{ .Values.nginxFrontendV1.versionLabel }}
+          weight: {{ .Values.istioVirtualService.routing.v1.weight }}
+        - destination:
+            host: {{ include "app-chart.fullname" . }}-{{ .Values.istioVirtualService.nginxFrontendServiceHost | default "nginx-frontend" }}
+            subset: {{ .Values.nginxFrontendV2.versionLabel }}
+          weight: {{ .Values.istioVirtualService.routing.v2.weight }}
+    # You can add more http routes here for app-backend and model-backend if accessed directly
+    # or keep them as internal ClusterIP services.
+    # For example, to expose app-backend directly via gateway (less common for this setup):
+    # - name: "app-backend-routing"
+    #   match:
+    #     - uri:
+    #         prefix: /api/ # Assuming your app-backend serves under /api/
+    #   route:
+    #     - destination:
+    #         host: {{ include "app-chart.fullname" . }}-{{ .Values.appBackend.nameOverride | default "app-backend" }}
+    #         port:
+    #           number: {{ .Values.appBackend.service.port }}
+{{- end }}

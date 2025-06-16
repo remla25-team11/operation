@@ -1,0 +1,52 @@
+{{- $componentConfig := .Values.modelBackend -}}
+{{- $componentName := $componentConfig.nameOverride | default "model-backend" -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app-chart.fullname" . }}-{{ $componentName }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "app-chart.componentLabels" (dict "root" . "componentName" $componentName) | nindent 4 }}
+spec:
+  replicas: {{ $componentConfig.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: {{ $componentName }}
+  template:
+    metadata:
+      labels:
+        {{- include "app-chart.componentLabels" (dict "root" . "componentName" $componentName) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ $componentName }}
+          image: {{ include "app-chart.imageName" (dict "global" .Values.global "componentImage" $componentConfig.image) }}
+          imagePullPolicy: {{ $componentConfig.image.pullPolicy | default "IfNotPresent" }}
+          {{- with $componentConfig.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ $componentConfig.service.targetPort }}
+              protocol: TCP
+          env:
+            {{- /* This is the robust fix using toYaml */}}
+            {{- $envVars := list -}}
+            {{- range $key, $value := $componentConfig.env -}}
+              {{- $var := dict "name" $key "value" $value -}}
+              {{- $envVars = append $envVars $var -}}
+            {{- end -}}
+            {{- $envVars | toYaml | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
