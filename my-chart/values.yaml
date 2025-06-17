@@ -54,7 +54,7 @@ appBackend:
   replicaCount: 1
   image:
     repository: app-backend
-    tag: "v1.1.0" # Uses global.defaultTag
+    tag: "v1.1.2" # Uses global.defaultTag
     pullPolicy: IfNotPresent
   service:
     port: 5000

@@ -34,7 +34,7 @@ Before you begin, ensure you have the following software installed on your host 
 
 Note: This environment requires significant system resources. It is recommended to have at least 8GB of free RAM.
 
-## Deployment Instructions
+## Instructions to start the application
 
 
 ### Step 1: Navigate and Start the Vagrant Environment
@@ -70,16 +70,20 @@ The following command will install all the components into the sentiment-app nam
 The --wait flag will cause the command to wait until all application pods are in a Running and Ready state.
 
 ```
-helm install my-app ./operation/my-chart \
-  --namespace sentiment-app \
-  --create-namespace \
-  --wait
+helm install my-app ./operation/my-chart --namespace sentiment-app --create-namespace --wait
 ```
 
-Once all the pods have successfully started you can access the application with the following IP:
+The application should be accessible through the istio-ingress IP, which can be retrieved using:
 
-**192.168.56.100:31900**
+`kubectl get service istio-ingressgateway -n istio-system`
 
+If that doesn't work, check what port 80 is mapped to (e.g. 80:31811) and use `192.168.56.100:<PORT>`
+
+You can check the status of the pods by running:
+
+`kubectl get pods -n sentiment-app --watch`
+
+(Be sure to have set the KUBECONFIG variable first)
 
 ### Cleaning Up
 

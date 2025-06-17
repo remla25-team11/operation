@@ -12,13 +12,27 @@ spec:
     - {{ . | quote }}
     {{- end }}
   gateways:
-    - {{ .Values.istioGateway.name }} # Assumes Gateway is in the same namespace
-    # If Gateway is in istio-system, use: istio-system/{{ .Values.istioGateway.name }}
+    - {{ .Values.istioGateway.name }}
   http:
+    # Route 1: API traffic to the app-backend service.
+    # This rule is evaluated first because it is more specific.
+    - name: "app-backend-api-routes"
+      match:
+        - uri:
+            prefix: /api/
+      route:
+        - destination:
+            # Target the app-backend service directly
+            host: {{ include "app-chart.fullname" . }}-{{ .Values.appBackend.nameOverride | default "app-backend" }}
+            port:
+              number: {{ .Values.appBackend.service.port }}
+
+    # Route 2: All other traffic (frontend) to the NGINX service for canary release.
+    # This is the catch-all rule, evaluated second.
     - name: "nginx-frontend-routing"
       match:
         - uri:
-            prefix: / # Match all traffic for the hosts
+            prefix: /
       route:
         - destination:
             host: {{ include "app-chart.fullname" . }}-{{ .Values.istioVirtualService.nginxFrontendServiceHost | default "nginx-frontend" }}
@@ -28,16 +42,4 @@ spec:
             host: {{ include "app-chart.fullname" . }}-{{ .Values.istioVirtualService.nginxFrontendServiceHost | default "nginx-frontend" }}
             subset: {{ .Values.nginxFrontendV2.versionLabel }}
           weight: {{ .Values.istioVirtualService.routing.v2.weight }}
-    # You can add more http routes here for app-backend and model-backend if accessed directly
-    # or keep them as internal ClusterIP services.
-    # For example, to expose app-backend directly via gateway (less common for this setup):
-    # - name: "app-backend-routing"
-    #   match:
-    #     - uri:
-    #         prefix: /api/ # Assuming your app-backend serves under /api/
-    #   route:
-    #     - destination:
-    #         host: {{ include "app-chart.fullname" . }}-{{ .Values.appBackend.nameOverride | default "app-backend" }}
-    #         port:
-    #           number: {{ .Values.appBackend.service.port }}
 {{- end }}
