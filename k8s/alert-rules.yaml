@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: request-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: request-alerts
+      rules:
+        - alert: HighErrorRate
+          expr: rate(prometheus_http_requests_total{code=~"5.."}[2m]) > 0.05
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Too many 5xx errors"
+            description: "The error rate is above 5% over the last 5 minutes."
+
+        - alert: HighRequestRate
+          expr: rate(prometheus_http_requests_total[2m]) > 0.25
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: "More than 15 requests per minute"
+            description: "The request rate is above 15 requests per minute."
