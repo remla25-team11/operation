@@ -17,7 +17,7 @@ Created PR: https://github.com/remla25-team11/model-service/pull/2
 Approved PR: https://github.com/remla25-team11/model-training/pull/5
 
 -- Selin: --
-Created PR: https://github.com/remla25-team11/lib-version/pull/3
+Created PR: https://github.com/remla25-team11/lib-version/pull/3 (related to A1)
 Approved PR: https://github.com/remla25-team11/app/pull/2
 
 # Week 3
@@ -64,7 +64,7 @@ Approved PR: https://github.com/remla25-team11/model-service/pull/4
 
 
 -- Selin: --
-Created PR: https://github.com/remla25-team11/operation/pull/7
+Created PR: https://github.com/remla25-team11/operation/pull/7 (related to A3)
 Approved PR: https://github.com/remla25-team11/operation/pull/6
 
 # Week 5
@@ -88,7 +88,7 @@ Approved PR: [#6 - model-training](https://github.com/remla25-team11/model-train
 Created PR: [#10 - Fix version fetching](https://github.com/remla25-team11/app/pull/10)
 
 -- Selin: --
-Approved PR: https://github.com/remla25-team11/model-training/pull/7
+Approved PR: https://github.com/remla25-team11/model-training/pull/7 (related to A4)
 Created PR: https://github.com/remla25-team11/model-training/pull/8
 
 # Week 6
@@ -110,7 +110,7 @@ Created PR: https://github.com/remla25-team11/operation/pull/14
 Approved PR: https://github.com/remla25-team11/operation/pull/16 , https://github.com/remla25-team11/operation/pull/17
 
 -- Selin: --
-Created PR: https://github.com/remla25-team11/operation/pull/18
+Created PR: https://github.com/remla25-team11/operation/pull/18 (related to A5)
 Approved PR: https://github.com/remla25-team11/operation/pull/15
 
 # Week 7
