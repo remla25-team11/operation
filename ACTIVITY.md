@@ -88,8 +88,8 @@ Approved PR: [#6 - model-training](https://github.com/remla25-team11/model-train
 Created PR: [#10 - Fix version fetching](https://github.com/remla25-team11/app/pull/10)
 
 -- Selin: --
-Approved PR: https://github.com/remla25-team11/model-training/pull/7 (related to A4)
-Created PR: https://github.com/remla25-team11/model-training/pull/8
+Approved PR: https://github.com/remla25-team11/model-training/pull/7 
+Created PR: https://github.com/remla25-team11/model-training/pull/8 (related to A4)
 
 # Week 6
 
