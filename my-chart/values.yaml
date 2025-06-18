@@ -140,3 +140,10 @@ alertmanager:
   enabled: true
   alertmanagerSpec:
     configSecret: alertmanager-config
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorNamespaceSelector:
+      matchNames:
+        - monitoring
+        - istio-system

@@ -10,8 +10,8 @@ spec:
     - name: istio.rules
       rules:
         - alert: HighIstioTraffic
-          expr: rate(istio_requests_total{destination_workload="app-service", reporter="destination"}[1m]) > 0.05
-          for: 10s
+          expr: rate(istio_requests_total{destination_workload="app-service", reporter="destination"}[1m]) > 0.25
+          for: 120s
           labels:
             severity: warning
           annotations:
