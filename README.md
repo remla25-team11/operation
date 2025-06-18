@@ -493,3 +493,24 @@ predict_requests_total{version="v3"} 2.0
 # TYPE predict_requests_created gauge
 predict_requests_created{version="v3"} 1.7495915754185112e+09
 ```
+
+
+# Alert Manager
+Follow same steps as above until apply k8s. 
+
+Note: The Alertmanager is currently configured to send email alerts to my email address. However, anyone testing can view alert firing and alert statuses directly on the Prometheus and Alertmanager web UIs.
+
+```bash
+# Prometheus UI (default port 9090)
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090
+
+# Alertmanager UI (default port 9093)
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-alertmanager 9093:9093
+```
+example of alert firing and email notification- 
+![Screenshot from 2025-06-18 21-55-43](https://github.com/user-attachments/assets/e158dae1-dc40-465b-bfe5-3e252150970c)
+
+![image](https://github.com/user-attachments/assets/7f1cf095-af07-4997-85c1-822acb85f9cc)
+
+
+
