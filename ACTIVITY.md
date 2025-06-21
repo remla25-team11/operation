@@ -159,5 +159,7 @@ Approved PR: https://github.com/remla25-team11/operation/pull/22
 # Week 9:
 
 -- Taoufik: --
+Created PR: https://github.com/remla25-team11/model-training/pull/13
 Approved PR: https://github.com/remla25-team11/operation/pull/23
+
 
