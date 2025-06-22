@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: model-service
+spec:
+  gateways:
+  - my-gateway  # This must match metadata.name in your istio-gateway.yaml
+  hosts:
+  - "*"
+  http:
+  - match:
+    - uri:
+        prefix: /predict
+    route:
+    - destination:
+        host: model-service
+        subset: v1
+      weight: 100
+    mirror:
+      host: model-service
+      subset: v3

@@ -11,6 +11,10 @@ spec:
     metadata:
       labels:
         app: app-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "5000"
     spec:
       containers:
         - name: app-service
@@ -28,7 +32,7 @@ kind: Service
 metadata:
   name: app-service
   labels:
-   app: app-service
+    app: app-service
 spec:
   type: NodePort
   selector:
@@ -37,3 +41,6 @@ spec:
     - name: http
       port: 5000
       targetPort: 5000
+    - name: status-port
+      port: 15090
+      targetPort: 15090

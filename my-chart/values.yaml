@@ -117,3 +117,15 @@ grafanaDashboard:
 # Standard Kubernetes Ingress (usually disabled when using Istio Gateway for app)
 ingress:
   enabled: false
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    configSecret: alertmanager-config
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorNamespaceSelector:
+      matchNames:
+        - monitoring
+        - istio-system
