@@ -166,3 +166,6 @@ Approved PR: https://github.com/remla25-team11/operation/pull/23
 Created PR:
 Merged PR: https://github.com/remla25-team11/model-training/pull/13
 
+--Diego:--
+Created PR: https://github.com/remla25-team11/operation/pull/19
+Approved PR: https://github.com/remla25-team11/app/pull/13
