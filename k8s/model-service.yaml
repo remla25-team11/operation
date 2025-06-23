@@ -21,12 +21,10 @@ spec:
         ports:
         - containerPort: 8000
         env:
-        - name: SERVICE_VERSION
-          value: v1   # in model-service.yaml
-        - name: MODEL_URL
-          value: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c2_Classifier_Sentiment_Model
-        - name: VECTORIZER_URL
-          value: https://github.com/remla25-team11/model-training/releases/download/v0.0.1/c1_BoW_Sentiment_Model.pkl
+        - name: MODEL_PATH
+          value: /app/models/c2_Classifier_Sentiment_Model.pkl
+        - name: VECTORIZER_PATH
+          value: /app/models/c1_BoW_Sentiment_Model.pkl
 
 ---
 apiVersion: v1
