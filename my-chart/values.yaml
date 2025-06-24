@@ -70,7 +70,7 @@ modelBackend:
   replicaCount: 1
   image:
     repository: model-backend
-    tag: "" # Uses global.defaultTag
+    tag: "v1.0.1" # Uses global.defaultTag
     pullPolicy: IfNotPresent
   service:
     port: 8000
