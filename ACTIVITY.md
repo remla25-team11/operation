@@ -162,6 +162,10 @@ Approved PR: https://github.com/remla25-team11/operation/pull/22
 Created PR: https://github.com/remla25-team11/model-training/pull/13
 Approved PR: https://github.com/remla25-team11/operation/pull/23
 
+-- Leo: --
+Created PR: https://github.com/remla25-team11/model-service/pull/9 (Related to A3)
+Approved PR: https://github.com/remla25-team11/model-service/pull/8 
+
 --Selin:--
 Created PR:
 Merged PR: https://github.com/remla25-team11/model-training/pull/13
