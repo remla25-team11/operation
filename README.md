@@ -79,6 +79,11 @@ The application should be accessible through the istio-ingress IP, which can be 
 
 If that doesn't work, check what port 80 is mapped to (e.g. 80:31811) and use `192.168.56.100:<PORT>`
 
+If you still can't connect try running this command too: 
+
+`kubectl patch svc istio-ingressgateway -n istio-system \
+  -p '{"spec": {"type": "NodePort"}}'`
+
 You can check the status of the pods by running:
 
 `kubectl get pods -n sentiment-app --watch`
