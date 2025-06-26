@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .Values.global.namespace }}
+  labels:
+    istio-injection: enabled # Crucial for Istio sidecar injection
+    {{- include "app-chart.labels" . | nindent 4 }}

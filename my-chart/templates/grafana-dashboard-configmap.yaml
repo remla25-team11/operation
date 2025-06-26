@@ -1,0 +1,18 @@
+{{- if .Values.grafanaDashboard.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "app-chart.fullname" . }}-app-dashboard
+  # Deploy in 'monitoring' namespace if Grafana is there and configured to watch it.
+  # Otherwise, deploy in app's namespace and ensure Grafana is configured to scan it.
+  # For kube-prometheus-stack, it usually watches its own namespace or those specified.
+  # Let's assume Grafana is in 'monitoring' and can discover dashboards there.
+  namespace: {{ .Values.grafanaDashboard.namespace | default "monitoring" }}
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
+    # This label is used by the Grafana sidecar to discover dashboards
+    grafana_dashboard: "1"
+data:
+  {{ .Values.grafanaDashboard.fileName }}: |-
+    {{- .Files.Get (printf "grafana/dashboards/%s" .Values.grafanaDashboard.fileName) | nindent 4 }}
+{{- end }}

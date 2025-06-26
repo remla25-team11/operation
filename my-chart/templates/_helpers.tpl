@@ -1,16 +1,15 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "my_chart.name" -}}
+{{- define "app-chart.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
 */}}
-{{- define "my_chart.fullname" -}}
+{{- define "app-chart.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,39 +23,50 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 {{/*
-Create chart name and version as used by the chart label.
+Create the chart reference string.
 */}}
-{{- define "my_chart.chart" -}}
+{{- define "app-chart.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
-Common labels
+Common labels that will be applied to every resource.
 */}}
-{{- define "my_chart.labels" -}}
-helm.sh/chart: {{ include "my_chart.chart" . }}
-{{ include "my_chart.selectorLabels" . }}
+{{- define "app-chart.labels" -}}
+helm.sh/chart: {{ include "app-chart.chart" . }}
+app.kubernetes.io/name: {{ include "app-chart.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- end }}
+{{- end -}}
 
 {{/*
-Selector labels
+Component-specific labels. This is the key to fixing selectors.
+It includes all common labels and adds component-specific ones.
+Usage:
+{{- include "app-chart.componentLabels" (dict "root" . "componentName" "nginx-frontend-v1" "versionLabel" "v1") | nindent 4 }}
 */}}
-{{- define "my_chart.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "my_chart.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "app-chart.componentLabels" -}}
+{{- include "app-chart.labels" .root }}
+app.kubernetes.io/component: {{ .componentName }}
+{{- if .versionLabel }}
+version: {{ .versionLabel }}
+{{- end }}
+{{- /* This common label is for the nginx service to select BOTH v1 and v2 pods */}}
+{{- if (hasPrefix "nginx-frontend" .componentName) }}
+app-role: nginx-frontend
+{{- end }}
 {{- end }}
 
+
 {{/*
-Create the name of the service account to use
+Generate the full image name including registry and tag.
 */}}
-{{- define "my_chart.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "my_chart.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
+{{- define "app-chart.imageName" -}}
+{{- $registry := .global.imageRegistry | default "." -}}
+{{- $repository := .componentImage.repository -}}
+{{- $tag := .componentImage.tag | default .global.defaultTag -}}
+{{- printf "%s/%s:%s" $registry $repository $tag }}
 {{- end }}

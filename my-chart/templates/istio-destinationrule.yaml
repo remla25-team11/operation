@@ -1,0 +1,49 @@
+{{- if .Values.istioDestinationRule.enabled -}}
+# DestinationRule for nginx-frontend service (for canary subsets)
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ .Values.istioDestinationRule.name }}-nginx-frontend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
+spec:
+  host: {{ include "app-chart.fullname" . }}-{{ .Values.istioDestinationRule.nginxFrontendServiceHost | default "nginx-frontend" }}
+  subsets:
+    - name: {{ .Values.nginxFrontendV1.versionLabel }}
+      labels:
+        # This label now correctly matches the pod label 'version'
+        version: {{ .Values.nginxFrontendV1.versionLabel }}
+    - name: {{ .Values.nginxFrontendV2.versionLabel }}
+      labels:
+        # This label now correctly matches the pod label 'version'
+        version: {{ .Values.nginxFrontendV2.versionLabel }}
+---
+# DestinationRule for app-backend service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ .Values.istioDestinationRule.name }}-app-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
+spec:
+  host: {{ include "app-chart.fullname" . }}-{{ .Values.appBackend.nameOverride | default "app-backend" }}
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+---
+# DestinationRule for model-backend service
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ .Values.istioDestinationRule.name }}-model-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "app-chart.labels" . | nindent 4 }}
+spec:
+  host: {{ include "app-chart.fullname" . }}-{{ .Values.modelBackend.nameOverride | default "model-backend" }}
+  trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
+{{- end }}

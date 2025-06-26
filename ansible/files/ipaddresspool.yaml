@@ -5,4 +5,4 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - 192.168.56.100-192.168.56.110
+  - 192.168.56.200-192.168.56.210 # Changed to a safer range
