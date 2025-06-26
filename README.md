@@ -71,7 +71,7 @@ With your environment configured, you can now deploy the entire application stac
 The following command will install all the components into the sentiment-app namespace. 
 The --wait flag will cause the command to wait until all application pods are in a Running and Ready state.
 
-bash ```
+``` bash
 helm install my-app ./operation/my-chart --namespace sentiment-app --create-namespace --wait
 ```
 
