@@ -56,10 +56,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       "workers"    => (1..NUM_WORKERS).map { |i| "node-#{i}" }
     }
 
-        # Write the inventory file to the Ansible folder so it is reusable
+        # Write the inventory file to the Ansible folder 
     ansible.inventory_path = "../ansible/inventory.cfg"
 
-    # Expose runtime details (e.g., number of workers) to Ansible as extra vars
+    # Expose runtime details to Ansible as extra vars
     ansible.extra_vars = {
       num_workers:   NUM_WORKERS,
       worker_memory: WORKER_MEMORY,
