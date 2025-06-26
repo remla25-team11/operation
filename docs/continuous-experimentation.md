@@ -45,7 +45,7 @@ We created a Grafana dashboard that displays:
 
 Total toggle usage per session
 
-![Grafana Toggle Rate Visualization](./docs/GrafanaScreenshot.png)
+![Grafana Toggle Rate Visualization](./GrafanaScreenshot.png)
 
 
 
