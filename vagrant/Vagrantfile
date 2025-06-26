@@ -1,15 +1,28 @@
 # vagrant/Vagrantfile
+ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox'
+ENV['VAGRANT_NO_COWS'] = '1'
+ENV['ANSIBLE_NOCOWS'] = '1'
 
 VAGRANTFILE_API_VERSION = "2"
 
-NUM_WORKERS = ENV.fetch("NUM_WORKERS", 2).to_i
-WORKER_MEMORY = ENV.fetch("WORKER_MEMORY", 6144).to_i
-WORKER_CPUS = ENV.fetch("WORKER_CPUS", 2).to_i
-CONTROLLER_MEMORY = 4096
-CONTROLLER_CPUS = 2
+# === ADAPTED RESOURCE SETTINGS ===
+# Increased the default memory for the controller and CPUs for the workers.
+# Made controller resources configurable via environment variables for consistency.
+
+# Controller settings (configurable from your shell)
+CONTROLLER_MEMORY = ENV.fetch("CONTROLLER_MEMORY", 4096).to_i # Increased default to 4GB
+CONTROLLER_CPUS   = ENV.fetch("CONTROLLER_CPUS", 2).to_i      # Default is 2, which is good
+
+# Worker settings (configurable from your shell)
+NUM_WORKERS   = ENV.fetch("NUM_WORKERS", 2).to_i
+WORKER_MEMORY = ENV.fetch("WORKER_MEMORY", 2048).to_i         # 2GB is a solid default
+WORKER_CPUS   = ENV.fetch("WORKER_CPUS", 1).to_i              # Increased default to 1 CPUs
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "bento/ubuntu-24.04"
+
+  # This synced folder is for Ansible playbooks and files
+  config.vm.synced_folder "../ansible", "/ansible", disabled: false
 
   # Define controller
   config.vm.define "ctrl" do |ctrl|
@@ -18,14 +31,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     ctrl.vm.provider "virtualbox" do |vb|
       vb.memory = CONTROLLER_MEMORY
       vb.cpus = CONTROLLER_CPUS
-    end
-    config.vm.synced_folder "../ansible", "/ansible"
-    ctrl.vm.provision "ansible" do |ansible|
-      ansible.playbook = "../ansible/ctrl.yaml"
-      ansible.inventory_path = "../ansible/inventory.cfg"
-      ansible.limit = "ctrl"
-      ansible.extra_vars = { "ANSIBLE_HOST_KEY_CHECKING" => "False" }
-      ansible.raw_arguments = ["-e", "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'"]
     end
   end
 
@@ -38,12 +43,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         vb.memory = WORKER_MEMORY
         vb.cpus = WORKER_CPUS
       end
-      node.vm.provision "ansible" do |ansible|
-        ansible.playbook = "../ansible/node.yaml"
-        ansible.inventory_path = "../ansible/inventory.cfg"
-        ansible.limit = "node-#{i}"
-      end
     end
   end
-end
 
+  # === SINGLE UNIFIED ANSIBLE PROVISIONER ===
+  # This block runs ONCE from your host machine after all VMs are up.
+  config.vm.provision "ansible", run: "once" do |ansible|
+    # Point to the master playbook
+    ansible.playbook = "../ansible/site.yaml"
+
+    # Let Vagrant dynamically generate the inventory with the correct
+    # groups ('controller', 'workers') for your playbooks to use.
+    ansible.groups = {
+      "controller" => ["ctrl"],
+      "workers"    => (1..NUM_WORKERS).map { |i| "node-#{i}" }
+    }
+  end
+end
