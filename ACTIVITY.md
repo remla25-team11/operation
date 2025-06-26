@@ -167,7 +167,7 @@ Created PR: https://github.com/remla25-team11/model-service/pull/9 (Related to A
 Approved PR: https://github.com/remla25-team11/model-service/pull/8 
 
 --Selin:--
-Created PR:
+Created PR: https://github.com/remla25-team11/model-service/pull/8
 Merged PR: https://github.com/remla25-team11/model-training/pull/13
 
 --Diego:--
@@ -177,3 +177,10 @@ Approved PR: https://github.com/remla25-team11/app/pull/13
 --Sowmya:--
 Created PR: https://github.com/remla25-team11/operation/pull/26
 Approved PR: https://github.com/remla25-team11/operation/pull/24
+
+# Week 10:
+
+-- Selin: --
+Created PR: https://github.com/remla25-team11/operation/pull/27 (related to A2)
+Approved PR: https://github.com/remla25-team11/operation/pull/26
+
