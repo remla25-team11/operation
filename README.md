@@ -60,7 +60,9 @@ Navigate back to the project's root directory and set the `KUBECONFIG` environme
 
 **Set the KUBECONFIG environment variable for this terminal session**
 
-`export KUBECONFIG="$(pwd)/operation/ansible/kubeconfig"`
+```bash
+export KUBECONFIG="$(pwd)/operation/ansible/kubeconfig"
+```
 
 ### Step 3: Deploy the Application with Helm
 
@@ -69,24 +71,34 @@ With your environment configured, you can now deploy the entire application stac
 The following command will install all the components into the sentiment-app namespace. 
 The --wait flag will cause the command to wait until all application pods are in a Running and Ready state.
 
-```
+bash ```
 helm install my-app ./operation/my-chart --namespace sentiment-app --create-namespace --wait
 ```
 
 The application should be accessible through the istio-ingress IP, which can be retrieved using:
 
-`kubectl get service istio-ingressgateway -n istio-system`
+```bash
+kubectl get service istio-ingressgateway -n istio-system
+```
 
-If that doesn't work, check what port 80 is mapped to (e.g. 80:31811) and use `192.168.56.100:<PORT>`
+If that doesn't work, check what port 80 is mapped to (e.g. 80:31811) and use 
+
+```bash
+192.168.56.100:<Node-Port>
+```
 
 If you still can't connect try running this command too: 
 
-`kubectl patch svc istio-ingressgateway -n istio-system \
-  -p '{"spec": {"type": "NodePort"}}'`
+```bash
+kubectl patch svc istio-ingressgateway -n istio-system \
+  -p '{"spec": {"type": "NodePort"}}'
+```
 
 You can check the status of the pods by running:
 
-`kubectl get pods -n sentiment-app --watch`
+```bash
+kubectl get pods -n sentiment-app --watch
+```
 
 (Be sure to have set the KUBECONFIG variable first)
 
@@ -578,7 +590,6 @@ predict_requests_created{version="v3"} 1.7495915754185112e+09
 
 
 # Alert Manager
-Follow same steps as above until apply k8s. 
 
 Note: The Alertmanager is currently configured to send email alerts to my email address. However, anyone testing can view alert firing and alert statuses directly on the Prometheus and Alertmanager web UIs.
 
